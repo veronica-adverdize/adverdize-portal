@@ -41,10 +41,7 @@ export default function AuthLayout({
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #E8405A, #F4845F)" }}>
-              <span className="text-white font-bold text-xs">A</span>
-            </div>
-            <span className="font-semibold text-gray-900">Adverdize</span>
+            <img src="/images/adverdize-logo.png" alt="Adverdize" className="h-8 w-auto" />
           </div>
           {children}
         </div>
