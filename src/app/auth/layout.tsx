@@ -18,7 +18,6 @@ export default function AuthLayout({
             <p className="text-white/75 text-base leading-relaxed">
               Access your reports, manage your subscription, and stay aligned with your Adverdize team — all from your client portal.
             </p>
-
           </div>
 
           <p className="text-white/40 text-xs">© 2026 Adverdize. All rights reserved.</p>
