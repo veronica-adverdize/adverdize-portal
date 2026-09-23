@@ -1,22 +1,39 @@
-import type { Metadata } from "next";
-import "@/styles/globals.css";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import Sidebar from "@/components/layout/Sidebar";
+import TopBar from "@/components/layout/TopBar";
 
-export const metadata: Metadata = {
-  title: "Adverdize Client Portal",
-  description: "Manage your Adverdize services, billing, and reports.",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
-
-export default function RootLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("*, organisation:organisations(*)")
+    .eq("id", user.id)
+    .single();
+
+  const mergedProfile = {
+    ...profile,
+    full_name: profile?.full_name ?? user.user_metadata?.full_name ?? "User",
+    email: profile?.email ?? user.email ?? "",
+  };
+
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <Sidebar role={profile?.role} />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <TopBar user={mergedProfile} />
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }
