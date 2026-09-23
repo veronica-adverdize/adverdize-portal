@@ -25,10 +25,19 @@ const CATEGORIES = [
     match: (name: string) => name.toLowerCase().includes("google ads") || name.toLowerCase().includes("search engine marketing"),
   },
   {
+    key: "smm",
+    label: "Social Media Management",
+    description: "Consistent, high-quality content that grows your brand online.",
+    match: (name: string) => {
+      const n = name.toLowerCase();
+      return n.includes("social media management") && !n.includes("static") && !n.includes("carousel") && !n.includes("video") && !n.includes("short");
+    },
+  },
+  {
     key: "smm-static",
     label: "Social Media Management (Static/Carousel)",
     description: "Consistent static and carousel posts that grow your brand online.",
-    match: (name: string) => name.toLowerCase().includes("social media management") && name.toLowerCase().includes("static"),
+    match: (name: string) => name.toLowerCase().includes("social media management") && (name.toLowerCase().includes("static") || name.toLowerCase().includes("carousel")),
   },
   {
     key: "smm-video",
