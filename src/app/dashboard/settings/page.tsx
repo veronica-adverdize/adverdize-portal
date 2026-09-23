@@ -12,6 +12,10 @@ export default async function SettingsPage() {
     .eq("id", user.id)
     .single();
 
+  const fullName = profile?.full_name ?? user.user_metadata?.full_name ?? "";
+  const email = profile?.email ?? user.email ?? "";
+  const companyName = profile?.organisation?.name ?? user.user_metadata?.company_name ?? "";
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -25,11 +29,11 @@ export default async function SettingsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="label">Full name</label>
-            <input className="input" defaultValue={profile?.full_name ?? ""} disabled />
+            <input className="input bg-gray-50" defaultValue={fullName} disabled />
           </div>
           <div>
             <label className="label">Email</label>
-            <input className="input" defaultValue={profile?.email ?? ""} disabled />
+            <input className="input bg-gray-50" defaultValue={email} disabled />
           </div>
         </div>
         <p className="text-xs text-gray-400">
@@ -42,7 +46,7 @@ export default async function SettingsPage() {
         <h2 className="text-sm font-semibold text-gray-900">Organisation</h2>
         <div>
           <label className="label">Company name</label>
-          <input className="input" defaultValue={profile?.organisation?.name ?? ""} disabled />
+          <input className="input bg-gray-50" defaultValue={companyName} disabled />
         </div>
         <p className="text-xs text-gray-400">
           Organisation details are managed by Adverdize.
