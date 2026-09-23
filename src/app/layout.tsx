@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "@/styles/globals.css";
+import ProgressBar from "@/components/ui/ProgressBar";
 
 export const metadata: Metadata = {
   title: "Adverdize Client Portal",
@@ -16,7 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ProgressBar />
+        {children}
+      </body>
     </html>
   );
 }
