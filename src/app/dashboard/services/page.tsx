@@ -278,7 +278,10 @@ export default function ServicesPage() {
               </h3>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">{cat.description}</p>
               <p className="text-xs text-gray-400 mt-3 font-medium">
-                {catServices.length} {catServices.length === 1 ? "plan" : "plans"} available →
+                {(() => {
+                  const periods = new Set(catServices.flatMap(s => s.prices?.map((p: Price) => p.billing_period) ?? []));
+                  return `${periods.size} ${periods.size === 1 ? "plan" : "plans"} available →`;
+                })()}
               </p>
             </button>
           );
