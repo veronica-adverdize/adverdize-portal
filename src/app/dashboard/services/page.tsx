@@ -5,35 +5,36 @@ import { Check, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-// Service categories and which DB package names map to each
 const CATEGORIES = [
   {
     key: "seo",
     label: "Search Engine Optimisation",
     description: "Rank higher on Google and drive organic traffic to your business.",
-    icon: "📈",
     match: (name: string) => name.toLowerCase().includes("seo") || name.toLowerCase().includes("search engine optim"),
   },
   {
     key: "social-ads",
     label: "Social Media Advertising",
     description: "Run high-converting paid ads across Facebook, Instagram, and more.",
-    icon: "📣",
     match: (name: string) => name.toLowerCase().includes("social media advertising") || name.toLowerCase().includes("social media ads"),
   },
   {
     key: "google-ads",
     label: "Google Ads",
     description: "Get in front of customers actively searching for your services.",
-    icon: "🔍",
     match: (name: string) => name.toLowerCase().includes("google ads") || name.toLowerCase().includes("search engine marketing"),
   },
   {
-    key: "smm",
-    label: "Social Media Management",
-    description: "Consistent, high-quality content that grows your brand online.",
-    icon: "📱",
-    match: (name: string) => name.toLowerCase().includes("social media management"),
+    key: "smm-static",
+    label: "Social Media Management (Static/Carousel)",
+    description: "Consistent static and carousel posts that grow your brand online.",
+    match: (name: string) => name.toLowerCase().includes("social media management") && name.toLowerCase().includes("static"),
+  },
+  {
+    key: "smm-video",
+    label: "Social Media Management (Short-Form Videos)",
+    description: "Engaging short-form video content for Reels, TikTok, and more.",
+    match: (name: string) => name.toLowerCase().includes("social media management") && (name.toLowerCase().includes("video") || name.toLowerCase().includes("short")),
   },
 ];
 
@@ -53,12 +54,11 @@ type ServicePackage = {
   prices: Price[];
 };
 
-// How to display billing periods — always show as monthly equivalent
-const PERIOD_CONFIG: Record<string, { label: string; months: number; badge?: string }> = {
-  monthly: { label: "Monthly", months: 1 },
-  quarterly: { label: "Quarterly", months: 3, badge: "Save ~5%" },
-  semi_annual: { label: "Semi-Annual", months: 6, badge: "Save ~10%" },
-  annual: { label: "Annual", months: 12, badge: "Save ~20%" },
+const PERIOD_CONFIG: Record<string, { label: string; commitment: string }> = {
+  monthly:     { label: "Monthly",     commitment: "" },
+  quarterly:   { label: "Quarterly",   commitment: "3-month commitment" },
+  semi_annual: { label: "Semi-Annual", commitment: "6-month commitment" },
+  annual:      { label: "Annual",      commitment: "12-month commitment" },
 };
 
 export default function ServicesPage() {
@@ -109,29 +109,18 @@ export default function ServicesPage() {
     return service.prices?.find((p) => p.billing_period === period);
   }
 
-  function formatMonthlyEquivalent(amount: number, months: number): string {
-    const perMonth = amount / months / 100;
-    return `SGD ${perMonth.toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  }
-
-  function formatBilledAs(amount: number, months: number): string {
-    if (months === 1) return "";
-    const total = (amount / 100) * months;
-    return `Billed as SGD ${total.toLocaleString("en-SG")} every ${months === 3 ? "3 months" : months === 6 ? "6 months" : "year"}`;
-  }
-
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" />
         <div className="grid grid-cols-2 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-36 bg-gray-100 rounded-xl animate-pulse" />)}
+          {[1,2,3,4,5].map(i => <div key={i} className="h-36 bg-gray-100 rounded-xl animate-pulse" />)}
         </div>
       </div>
     );
   }
 
-  // Category view — show service plans
+  // Plans view — after clicking a category
   if (activeCategory) {
     const cat = CATEGORIES.find((c) => c.key === activeCategory)!;
     const catServices = getServicesForCategory(activeCategory);
@@ -158,7 +147,6 @@ export default function ServicesPage() {
           <p className="text-sm text-gray-500 mt-0.5">{cat.description}</p>
         </div>
 
-        {/* Billing period toggle */}
         {availablePeriods.length > 1 && (
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1 w-fit">
             {availablePeriods.map((period) => (
@@ -172,9 +160,6 @@ export default function ServicesPage() {
                 }`}
               >
                 {PERIOD_CONFIG[period]?.label}
-                {PERIOD_CONFIG[period]?.badge && selectedPeriod !== period && (
-                  <span className="ml-1.5 text-xs text-brand-pink">{PERIOD_CONFIG[period].badge}</span>
-                )}
               </button>
             ))}
           </div>
@@ -200,30 +185,21 @@ export default function ServicesPage() {
                 <h3 className="text-base font-semibold text-gray-900">{service.name}</h3>
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">{service.description}</p>
 
-                {price && config && (
+                {price ? (
                   <div className="mt-4 mb-1">
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-display font-bold text-gray-900">
-                        {formatMonthlyEquivalent(price.amount, config.months)}
+                        SGD {(price.amount / 100).toLocaleString("en-SG")}
                       </span>
                       <span className="text-xs text-gray-400">/ mo</span>
                     </div>
-                    {config.months > 1 && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {formatBilledAs(price.amount, config.months)}
-                      </p>
-                    )}
-                    {config.badge && (
-                      <span className="inline-block mt-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                        {config.badge}
-                      </span>
+                    {config.commitment && (
+                      <p className="text-xs text-gray-400 mt-0.5">{config.commitment}</p>
                     )}
                   </div>
-                )}
-
-                {!price && (
+                ) : (
                   <div className="mt-4 mb-1">
-                    <span className="text-sm text-gray-400">Price not available</span>
+                    <span className="text-sm text-gray-400">Not available</span>
                   </div>
                 )}
 
@@ -256,30 +232,27 @@ export default function ServicesPage() {
     );
   }
 
-  // Default view — show 4 service categories
+  // Default — category grid
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-xl font-display font-bold text-gray-900">Services</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Choose a service to get started.
-        </p>
+        <p className="text-sm text-gray-500 mt-0.5">Choose a service to get started.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {CATEGORIES.map((cat) => {
           const catServices = getServicesForCategory(cat.key);
+          if (catServices.length === 0) return null;
           const activeCount = catServices.filter((s) => subscribedIds.has(s.id)).length;
-          const planCount = catServices.length;
 
           return (
             <button
               key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
+              onClick={() => { setActiveCategory(cat.key); setSelectedPeriod("monthly"); }}
               className="card p-6 text-left hover:border-brand-pink/30 hover:shadow-md transition-all group"
             >
-              <div className="flex items-start justify-between">
-                <div className="text-3xl mb-3">{cat.icon}</div>
+              <div className="flex items-start justify-between mb-3">
                 {activeCount > 0 && (
                   <span className="badge-active">{activeCount} active</span>
                 )}
@@ -289,7 +262,7 @@ export default function ServicesPage() {
               </h3>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">{cat.description}</p>
               <p className="text-xs text-gray-400 mt-3 font-medium">
-                {planCount} {planCount === 1 ? "plan" : "plans"} available →
+                {catServices.length} {catServices.length === 1 ? "plan" : "plans"} available →
               </p>
             </button>
           );
