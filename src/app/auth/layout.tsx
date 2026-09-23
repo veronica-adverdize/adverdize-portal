@@ -19,19 +19,6 @@ export default function AuthLayout({
               Access your reports, manage your subscription, and stay aligned with your Adverdize team — all from your client portal.
             </p>
 
-            <div className="mt-10 grid grid-cols-2 gap-4">
-              {[
-                { label: "Active clients", value: "200+" },
-                { label: "Avg. ROI improvement", value: "3.4×" },
-                { label: "Keywords ranked", value: "12k+" },
-                { label: "Campaigns managed", value: "500+" },
-              ].map((stat) => (
-                <div key={stat.label} className="bg-white/10 rounded-xl p-4">
-                  <div className="text-2xl font-display font-bold text-white">{stat.value}</div>
-                  <div className="text-white/60 text-xs mt-0.5">{stat.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
           <p className="text-white/40 text-xs">© 2026 Adverdize. All rights reserved.</p>
