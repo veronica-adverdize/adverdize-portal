@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Package,
   CreditCard,
-  FileText,
   Users,
   Settings,
   BarChart3,
@@ -18,7 +17,6 @@ const clientNav = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Services", href: "/dashboard/services", icon: Package },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
-  { label: "Invoices", href: "/dashboard/billing/invoices", icon: FileText },
 ];
 
 const adminNav = [

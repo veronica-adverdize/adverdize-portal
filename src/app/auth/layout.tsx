@@ -8,7 +8,7 @@ export default function AuthLayout({
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #E8405A 0%, #F4845F 100%)" }}>
         <div className="absolute inset-0 flex flex-col items-start justify-between p-12">
           <div className="flex items-center gap-3">
-            <img src="/images/adverdize-logo-light.png" alt="Adverdize" className="h-16 w-auto" />
+            <img src="/images/adverdize-logo-light.png" alt="Adverdize" className="h-10 w-auto object-contain" />
           </div>
 
           <div className="max-w-md">
@@ -41,7 +41,7 @@ export default function AuthLayout({
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <img src="/images/adverdize-logo.png" alt="Adverdize" className="h-8 w-auto" />
+            <img src="/images/adverdize-logo.png" alt="Adverdize" className="h-8 w-auto object-contain" />
           </div>
           {children}
         </div>
