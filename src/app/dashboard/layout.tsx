@@ -19,11 +19,17 @@ export default async function DashboardLayout({
     .eq("id", user.id)
     .single();
 
+  const mergedProfile = {
+    ...profile,
+    full_name: profile?.full_name ?? user.user_metadata?.full_name ?? "User",
+    email: profile?.email ?? user.email ?? "",
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar role={profile?.role} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar user={profile} />
+        <TopBar user={mergedProfile} />
         <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
