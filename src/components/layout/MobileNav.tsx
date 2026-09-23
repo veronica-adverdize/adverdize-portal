@@ -46,7 +46,7 @@ interface MobileNavProps {
 export default function MobileNav({ role, userName, orgName }: MobileNavProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const isAdmin = role === "super_admin" || role === "staff";
+  const isAdmin = role === "super_admin";
   const menuItems = isAdmin ? adminMenuItems : clientMenuItems;
 
   // Close menu on route change
