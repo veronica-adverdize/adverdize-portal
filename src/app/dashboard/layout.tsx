@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import MobileNav from "@/components/layout/MobileNav";
@@ -14,7 +15,9 @@ export default async function DashboardLayout({
 
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  // Use admin client to bypass RLS when reading profile
+  const adminClient = createAdminClient();
+  const { data: profile } = await adminClient
     .from("users")
     .select("*, organisation:organisations(*)")
     .eq("id", user.id)
@@ -28,7 +31,6 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Sidebar — hidden on mobile */}
       <div className="hidden md:flex">
         <Sidebar role={profile?.role} />
       </div>
@@ -40,7 +42,6 @@ export default async function DashboardLayout({
         </main>
       </div>
 
-      {/* Mobile nav — visible on mobile only */}
       <MobileNav
         role={profile?.role}
         userName={mergedProfile.full_name}
