@@ -3,7 +3,7 @@ export default function IntegrationsPage() {
     {
       name: "Xero",
       description: "Sync invoices and contacts automatically with your Xero account.",
-      logo: "https://upload.wikimedia.org/wikipedia/en/thumb/2/23/Xero_software_logo.svg/200px-Xero_software_logo.svg.png",
+      logo: "/logos/xero.webp",
       status: "pending",
       note: "Requires Xero OAuth credentials to activate.",
       docsUrl: "https://developer.xero.com",
@@ -11,7 +11,7 @@ export default function IntegrationsPage() {
     {
       name: "Airwallex",
       description: "Payment processing, subscriptions, and billing management.",
-      logo: null,
+      logo: "/logos/airwallex.png",
       status: "pending",
       note: "Credentials pending — contact your Adverdize account manager.",
       docsUrl: null,
@@ -19,7 +19,7 @@ export default function IntegrationsPage() {
     {
       name: "Google",
       description: "Sign in with Google SSO for your team members.",
-      logo: null,
+      logo: "/logos/google.png",
       status: "pending",
       note: "Google OAuth credentials pending from client.",
       docsUrl: null,
