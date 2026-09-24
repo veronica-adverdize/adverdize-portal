@@ -41,7 +41,7 @@ export default function IntegrationsPage() {
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 rounded-lg border border-gray-100 flex items-center justify-center shrink-0 bg-gray-50 overflow-hidden">
                 {integration.logo ? (
-                  <img src={integration.logo} alt={integration.name} className="w-6 h-6 object-contain" />
+                  <img src={integration.logo} alt={integration.name} className="w-8 h-8 object-contain" />
                 ) : (
                   <span className="text-sm font-bold text-gray-400">{integration.name[0]}</span>
                 )}
