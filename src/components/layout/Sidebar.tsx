@@ -77,7 +77,7 @@ interface SidebarProps {
 
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
-  const isAdmin = role === "super_admin" || role === "staff";
+  const isAdmin = role === "super_admin";
   const nav = isAdmin ? adminNav : clientNav;
 
   return (

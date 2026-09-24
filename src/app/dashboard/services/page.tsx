@@ -101,7 +101,14 @@ export default function ServicesPage() {
         .eq("organisation_id", profile?.organisation_id)
         .eq("status", "active");
 
-      setServices(pkgs || []);
+      const tierOrder = (name: string) => {
+        if (name.toLowerCase().includes("starter")) return 1;
+        if (name.toLowerCase().includes("premium")) return 2;
+        if (name.toLowerCase().includes("scale")) return 3;
+        return 4;
+      };
+      const sorted = (pkgs || []).sort((a, b) => tierOrder(a.name) - tierOrder(b.name));
+      setServices(sorted);
       setSubscribedIds(new Set(subs?.map((s) => s.service_id)));
       setLoading(false);
     }
@@ -271,7 +278,10 @@ export default function ServicesPage() {
               </h3>
               <p className="text-xs text-gray-400 mt-1 leading-relaxed">{cat.description}</p>
               <p className="text-xs text-gray-400 mt-3 font-medium">
-                {catServices.length} {catServices.length === 1 ? "plan" : "plans"} available →
+                {(() => {
+                  const periods = new Set(catServices.flatMap(s => s.prices?.map((p: Price) => p.billing_period) ?? []));
+                  return `${periods.size} ${periods.size === 1 ? "plan" : "plans"} available →`;
+                })()}
               </p>
             </button>
           );
