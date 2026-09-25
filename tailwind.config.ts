@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          pink: "#E8405A",
+          pink: "#E05C83",
           coral: "#F4845F",
           dark: "#1A1A2E",
           gray: "#6B7280",
@@ -22,7 +22,7 @@ const config: Config = {
         display: ["Plus Jakarta Sans", "Inter", "sans-serif"],
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #E8405A 0%, #F4845F 100%)",
+        "brand-gradient": "linear-gradient(135deg, #E05C83 0%, #F4845F 100%)",
       },
     },
   },
