@@ -36,7 +36,8 @@ export default function TopBar({ user }: TopBarProps) {
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
-      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 w-64">
+      {/* Search */}
+      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 w-64 focus-within:border-[#E05C83] focus-within:ring-2 focus-within:ring-[#E05C83]/10 transition-all">
         <Search size={14} className="text-gray-400 shrink-0" />
         <input
           type="text"
@@ -45,14 +46,14 @@ export default function TopBar({ user }: TopBarProps) {
         />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {/* Notifications */}
         <div className="relative">
           <button
             onClick={() => { setNotifOpen(!notifOpen); setOpen(false); }}
-            className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors"
+            className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-600"
           >
-            <Bell size={16} className="text-gray-500" />
+            <Bell size={16} />
           </button>
 
           {notifOpen && (
@@ -80,7 +81,7 @@ export default function TopBar({ user }: TopBarProps) {
           >
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-              style={{ background: "linear-gradient(135deg, #E8405A, #F4845F)" }}
+              style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
             >
               {initials}
             </div>
@@ -110,7 +111,7 @@ export default function TopBar({ user }: TopBarProps) {
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2.5 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
                 >
                   <LogOut size={14} />
                   Sign out

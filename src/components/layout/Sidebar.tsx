@@ -82,6 +82,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
   return (
     <aside className="w-60 bg-white border-r border-gray-100 flex flex-col shrink-0">
+      {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-gray-100">
         <img
           src="/images/adverdize-logo.png"
@@ -90,10 +91,11 @@ export default function Sidebar({ role }: SidebarProps) {
         />
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {nav.map((group) => (
           <div key={group.section}>
-            <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-3 mb-1">
+            <p className="text-[10px] font-semibold text-gray-300 tracking-widest px-3 mb-1.5">
               {group.section}
             </p>
             <div className="space-y-0.5">
@@ -111,12 +113,12 @@ export default function Sidebar({ role }: SidebarProps) {
                     className={clsx(
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       active
-                        ? "text-brand-pink"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                        ? "text-[#E05C83]"
+                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
                     )}
-                    style={active ? { backgroundColor: "rgba(232,64,90,0.08)" } : {}}
+                    style={active ? { backgroundColor: "rgba(224,92,131,0.08)" } : {}}
                   >
-                    <Icon size={15} />
+                    <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
                     {item.label}
                   </Link>
                 );
@@ -125,6 +127,11 @@ export default function Sidebar({ role }: SidebarProps) {
           </div>
         ))}
       </nav>
+
+      {/* Footer */}
+      <div className="px-4 py-4 border-t border-gray-100">
+        <p className="text-[10px] text-gray-300">© 2026 Adverdize</p>
+      </div>
     </aside>
   );
 }
