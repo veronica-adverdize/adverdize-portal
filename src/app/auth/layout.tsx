@@ -26,9 +26,12 @@ export default function AuthLayout({
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full px-14 py-10">
           {/* Logo */}
-          <div className="mb-9">
+          <div className="mb-auto">
             <img src="/images/adverdize-logo.png" alt="Adverdize" className="h-9 w-auto object-contain" />
           </div>
+
+          {/* Center block */}
+          <div className="flex flex-col my-auto">
 
           {/* Copy */}
           <p className="text-[10px] font-semibold uppercase tracking-[1.4px] mb-2.5" style={{ color: "#E05C83" }}>
@@ -177,6 +180,8 @@ export default function AuthLayout({
               </div>
             </div>
           </div>
+
+          </div>{/* end center block */}
 
           {/* Footer */}
           <p className="text-[10px] text-gray-300 mt-auto pt-4">© 2026 Adverdize. All rights reserved.</p>
