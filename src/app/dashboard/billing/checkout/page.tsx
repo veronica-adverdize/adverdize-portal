@@ -20,11 +20,11 @@ interface Service {
   prices: Price[];
 }
 
-const periodLabels: Record<string, { label: string; badge?: string }> = {
-  monthly: { label: "Monthly" },
-  quarterly: { label: "Every 3 months", badge: "5% off" },
-  semi_annual: { label: "Every 6 months", badge: "10% off" },
-  annual: { label: "Annual", badge: "20% off" },
+const periodLabels: Record<string, { label: string; sub: string }> = {
+  monthly:     { label: "Monthly",                  sub: "" },
+  quarterly:   { label: "Every month for 3 months", sub: "3-month commitment" },
+  semi_annual: { label: "Every month for 6 months", sub: "6-month commitment" },
+  annual:      { label: "Every month for 12 months", sub: "12-month commitment" },
 };
 
 export default function CheckoutPage() {
@@ -139,8 +139,8 @@ export default function CheckoutPage() {
                       />
                       <div>
                         <p className="text-xs font-medium text-gray-800">{meta.label}</p>
-                        {meta.badge && (
-                          <span className="text-[10px] text-green-600 font-medium">{meta.badge}</span>
+                        {meta.sub && (
+                          <span className="text-[10px] text-gray-400">{meta.sub}</span>
                         )}
                       </div>
                     </div>
