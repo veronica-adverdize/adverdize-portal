@@ -128,9 +128,18 @@ export default function ServicesPage() {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="h-8 w-48 bg-gray-100 rounded animate-pulse" />
-        <div className="grid grid-cols-2 gap-4">
-          {[1,2,3,4,5].map(i => <div key={i} className="h-36 bg-gray-100 rounded-xl animate-pulse" />)}
+        <div>
+          <div className="h-7 w-28 bg-gray-100 rounded animate-pulse" />
+          <div className="h-4 w-48 bg-gray-100 rounded animate-pulse mt-2" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="card p-6 space-y-3">
+              <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
+              <div className="h-3 w-full bg-gray-100 rounded animate-pulse" />
+              <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+            </div>
+          ))}
         </div>
       </div>
     );
