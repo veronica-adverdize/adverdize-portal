@@ -214,13 +214,13 @@ export default function ServicesPage() {
                   <div className="mt-4 mb-1">
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-display font-bold text-gray-900">
-                        SGD {(price.amount / 100 / config.months).toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        SGD {(price.amount / 100).toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </span>
                       <span className="text-xs text-gray-400">/ mo</span>
                     </div>
-                    {config.commitment && (
+                    {config.months > 1 && (
                       <p className="text-xs text-gray-400 mt-0.5">
-                        SGD {(price.amount / 100).toLocaleString("en-SG")} billed {config.commitment.replace("-month commitment", " months")}
+                        Billed monthly for {config.months} months
                       </p>
                     )}
                   </div>
