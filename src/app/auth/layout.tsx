@@ -26,12 +26,12 @@ export default function AuthLayout({
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full px-14 py-10">
           {/* Logo */}
-          <div className="mb-auto">
+          <div className="mb-10 shrink-0">
             <img src="/images/adverdize-logo.png" alt="Adverdize" className="h-9 w-auto object-contain" />
           </div>
 
           {/* Center block */}
-          <div className="flex flex-col my-auto">
+          <div className="flex flex-col flex-1 justify-center">
 
           {/* Copy */}
           <p className="text-[11px] font-semibold uppercase tracking-[1.4px] mb-3" style={{ color: "#E05C83" }}>
@@ -83,14 +83,14 @@ export default function AuthLayout({
           <div
             className="overflow-hidden shrink-0"
             style={{
-              height: "360px",
+              height: "260px",
               margin: "0 -56px",
-              maskImage: "linear-gradient(to bottom, black 0%, black 65%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 65%, transparent 100%)",
+              maskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 90%)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 90%)",
             }}
           >
             <div
-              className="mx-14 rounded-t-[10px] overflow-hidden"
+              className="mx-14 rounded-[10px] border border-gray-200 overflow-hidden"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
             >
               {/* Topbar */}
