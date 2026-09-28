@@ -63,11 +63,11 @@ type ServicePackage = {
   prices: Price[];
 };
 
-const PERIOD_CONFIG: Record<string, { label: string; commitment: string }> = {
-  monthly:     { label: "Monthly",     commitment: "" },
-  quarterly:   { label: "Quarterly",   commitment: "3-month commitment" },
-  semi_annual: { label: "Semi-Annual", commitment: "6-month commitment" },
-  annual:      { label: "Annual",      commitment: "12-month commitment" },
+const PERIOD_CONFIG: Record<string, { label: string; commitment: string; months: number }> = {
+  monthly:     { label: "Monthly",     commitment: "",                   months: 1  },
+  quarterly:   { label: "Quarterly",   commitment: "3-month commitment", months: 3  },
+  semi_annual: { label: "Semi-Annual", commitment: "6-month commitment", months: 6  },
+  annual:      { label: "Annual",      commitment: "12-month commitment", months: 12 },
 };
 
 export default function ServicesPage() {
@@ -214,12 +214,14 @@ export default function ServicesPage() {
                   <div className="mt-4 mb-1">
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-display font-bold text-gray-900">
-                        SGD {(price.amount / 100).toLocaleString("en-SG")}
+                        SGD {(price.amount / 100 / config.months).toLocaleString("en-SG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </span>
                       <span className="text-xs text-gray-400">/ mo</span>
                     </div>
                     {config.commitment && (
-                      <p className="text-xs text-gray-400 mt-0.5">{config.commitment}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        SGD {(price.amount / 100).toLocaleString("en-SG")} billed {config.commitment.replace("-month commitment", " months")}
+                      </p>
                     )}
                   </div>
                 ) : (
