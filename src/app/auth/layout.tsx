@@ -34,13 +34,13 @@ export default function AuthLayout({
           <div className="flex flex-col my-auto">
 
           {/* Copy */}
-          <p className="text-[10px] font-semibold uppercase tracking-[1.4px] mb-2.5" style={{ color: "#E05C83" }}>
+          <p className="text-[11px] font-semibold uppercase tracking-[1.4px] mb-3" style={{ color: "#E05C83" }}>
             Client Portal
           </p>
 
           <h2
-            className="font-display font-extrabold text-gray-900 leading-[1.2] mb-3"
-            style={{ fontSize: "28px" }}
+            className="font-display font-extrabold text-gray-900 leading-[1.15] mb-4"
+            style={{ fontSize: "42px" }}
           >
             Your marketing,<br />
             <span
@@ -54,12 +54,12 @@ export default function AuthLayout({
             </span>
           </h2>
 
-          <p className="text-[13px] leading-relaxed text-gray-500 mb-5 max-w-[300px]">
+          <p className="text-[15px] leading-relaxed text-gray-500 mb-6 max-w-[400px]">
             Access real-time reports, manage your subscription, and stay aligned with your Adverdize team — all in one place.
           </p>
 
           {/* Feature list */}
-          <div className="flex flex-col gap-2.5 mb-7">
+          <div className="flex flex-col gap-3 mb-8">
             {[
               "Real-time campaign performance",
               "Subscription & billing management",
@@ -67,14 +67,14 @@ export default function AuthLayout({
             ].map((item) => (
               <div key={item} className="flex items-center gap-2.5">
                 <div
-                  className="w-[17px] h-[17px] rounded-full flex items-center justify-center shrink-0"
+                  className="w-[20px] h-[20px] rounded-full flex items-center justify-center shrink-0"
                   style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
                 >
-                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                    <path d="M1.5 4.5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
-                <span className="text-[12px] text-gray-600">{item}</span>
+                <span className="text-[14px] text-gray-600">{item}</span>
               </div>
             ))}
           </div>
@@ -83,10 +83,10 @@ export default function AuthLayout({
           <div
             className="overflow-hidden shrink-0"
             style={{
-              height: "200px",
+              height: "300px",
               margin: "0 -56px",
-              maskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 60%, transparent 100%)",
+              maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 95%)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 95%)",
             }}
           >
             <div
