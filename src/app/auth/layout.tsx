@@ -85,8 +85,8 @@ export default function AuthLayout({
             style={{
               height: "260px",
               margin: "0 -56px",
-              maskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 90%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 50%, transparent 90%)",
+              maskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 75%)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 40%, transparent 75%)",
             }}
           >
             <div
