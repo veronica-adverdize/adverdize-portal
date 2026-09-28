@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Package, CreditCard, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Package, CreditCard, ArrowRight, CheckCircle2, BarChart3, Zap, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -144,10 +144,90 @@ export default async function DashboardPage() {
         )}
       </div>
 
+      {/* Campaign performance — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
+            >
+              <BarChart3 size={15} style={{ color: "#E05C83" }} />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Campaign Performance</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Real-time stats from your active campaigns</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          {["Impressions", "Clicks", "Ad Spend"].map((label) => (
+            <div key={label} className="rounded-lg bg-gray-50 border border-gray-100 p-4">
+              <p className="text-xs text-gray-400 mb-2">{label}</p>
+              <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
+              <div className="h-3 w-12 bg-gray-100 rounded animate-pulse mt-2" />
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 text-center">
+          Live campaign data will appear here once your services are active and reporting is configured.
+        </p>
+      </div>
+
+      {/* Quick actions — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
+            >
+              <Zap size={15} style={{ color: "#F4845F" }} />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Quick Actions</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Manage your services in one click</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { label: "Upgrade Plan", desc: "Move to a higher tier mid-cycle" },
+            { label: "Add Service", desc: "Subscribe to an additional service" },
+            { label: "Apply Promo Code", desc: "Enter a discount or referral code" },
+          ].map((action) => (
+            <div
+              key={action.label}
+              className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50"
+            >
+              <p className="text-xs font-semibold text-gray-700">{action.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{action.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Billing placeholder */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-sm font-semibold text-gray-900">Billing & Invoices</h2>
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
+            >
+              <TrendingUp size={15} style={{ color: "#E05C83" }} />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Billing &amp; Invoices</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Your payment history and upcoming charges</p>
+            </div>
+          </div>
           <Link
             href="/dashboard/billing"
             className="text-xs font-medium flex items-center gap-1 transition-colors"

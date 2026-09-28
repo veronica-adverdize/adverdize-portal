@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { CreditCard, ArrowUpDown, Package, FileText } from "lucide-react";
+import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCircle } from "lucide-react";
 import Link from "next/link";
 import CancelButton from "@/components/billing/CancelButton";
 import PortalButton from "@/components/billing/PortalButton";
@@ -83,7 +83,7 @@ export default async function BillingPage({
                         </span>
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5 capitalize">
-                        SGD {((sub.price?.amount ?? 0) / 100).toLocaleString()} ·{" "}
+                        SGD {((sub.price?.amount ?? 0) / 100).toLocaleString()}/mo ·{" "}
                         {sub.price?.billing_period?.replace("_", " ")} plan
                       </p>
                     </div>
@@ -125,6 +125,123 @@ export default async function BillingPage({
         )}
       </div>
 
+      {/* Payment method — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
+            >
+              <CreditCard size={15} style={{ color: "#E05C83" }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Payment Method</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Your saved card for automatic billing</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <div className="rounded-lg bg-gray-50 border border-dashed border-gray-200 p-5 flex items-center gap-4">
+          <div className="w-10 h-7 rounded bg-gray-200 shrink-0" />
+          <div>
+            <div className="h-3 w-28 bg-gray-200 rounded animate-pulse" />
+            <div className="h-2.5 w-16 bg-gray-100 rounded animate-pulse mt-1.5" />
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mt-3">
+          Card management will be available via Airwallex once your account is connected. Your card details are stored securely by Airwallex — we never see or store them.
+        </p>
+      </div>
+
+      {/* Mid-cycle changes — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
+            >
+              <ArrowDownUp size={15} style={{ color: "#F4845F" }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Mid-Cycle Changes</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Upgrade or downgrade your plan anytime</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50">
+            <p className="text-xs font-semibold text-gray-700">Upgrade Plan</p>
+            <p className="text-xs text-gray-400 mt-0.5">Switch to a higher tier. Pro-rated charges apply for the remainder of your billing cycle.</p>
+          </div>
+          <div className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50">
+            <p className="text-xs font-semibold text-gray-700">Downgrade Plan</p>
+            <p className="text-xs text-gray-400 mt-0.5">Switch to a lower tier. Change takes effect at the start of your next billing cycle.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Promo code — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
+            >
+              <Tag size={15} style={{ color: "#E05C83" }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Promo Code</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Apply a discount or referral code</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <div className="flex gap-2 opacity-50">
+          <input
+            disabled
+            placeholder="Enter promo code"
+            className="input flex-1 cursor-not-allowed"
+          />
+          <button disabled className="btn-primary text-xs cursor-not-allowed opacity-80 shrink-0">
+            Apply
+          </button>
+        </div>
+      </div>
+
+      {/* Pause subscription — coming soon */}
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
+            >
+              <PauseCircle size={15} style={{ color: "#F4845F" }} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Pause Subscription</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Temporarily pause billing without cancelling</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+            COMING SOON
+          </span>
+        </div>
+        <p className="text-xs text-gray-400">
+          Pausing your subscription will stop billing for the selected period. Your account and data remain intact. Available once Airwallex is connected.
+        </p>
+      </div>
+
       {/* Invoice history */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-5">
@@ -137,20 +254,32 @@ export default async function BillingPage({
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Invoice History</h3>
-              <p className="text-xs text-gray-400 mt-0.5">View and download past invoices</p>
+              <p className="text-xs text-gray-400 mt-0.5">All invoices are auto-paid via your stored card</p>
             </div>
           </div>
           <Link href="/dashboard/billing/invoices" className="btn-outline text-xs">
             View all
           </Link>
         </div>
-        <div className="rounded-lg bg-gray-50 border border-dashed border-gray-200 p-6 text-center">
-          <CreditCard size={28} className="text-gray-300 mx-auto mb-2" />
-          <p className="text-sm text-gray-400 font-medium">Invoice history coming soon</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Available once Airwallex billing is connected to your account.
-          </p>
+
+        {/* Placeholder invoice rows */}
+        <div className="divide-y divide-gray-50 opacity-40 pointer-events-none select-none">
+          {["Sep 2026", "Aug 2026", "Jul 2026"].map((month) => (
+            <div key={month} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+              <div>
+                <p className="text-sm font-medium text-gray-900">Social Media Management — Monthly</p>
+                <p className="text-xs text-gray-400 mt-0.5">{month}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-gray-900">SGD 1,200</span>
+                <span className="badge-active">Paid</span>
+              </div>
+            </div>
+          ))}
         </div>
+        <p className="text-xs text-gray-400 text-center mt-4">
+          Invoice history will be available once Airwallex is connected to your account.
+        </p>
       </div>
 
     </div>
