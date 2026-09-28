@@ -83,14 +83,14 @@ export default function AuthLayout({
           <div
             className="overflow-hidden shrink-0"
             style={{
-              height: "300px",
+              height: "360px",
               margin: "0 -56px",
-              maskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 95%)",
-              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 55%, transparent 95%)",
+              maskImage: "linear-gradient(to bottom, black 0%, black 65%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, black 0%, black 65%, transparent 100%)",
             }}
           >
             <div
-              className="mx-14 rounded-[10px] border border-gray-200 overflow-hidden"
+              className="mx-14 rounded-t-[10px] overflow-hidden"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}
             >
               {/* Topbar */}
