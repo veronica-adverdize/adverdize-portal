@@ -46,25 +46,34 @@ export default function AdminClientsPage() {
           </div>
         </div>
 
+        {/* Column headers */}
+        <div className="grid items-center gap-4 px-1 mb-2 opacity-40" style={{ gridTemplateColumns: "2fr 2fr 1fr 80px 56px" }}>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Client</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 hidden sm:block">Service</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">MRR</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</span>
+          <span />
+        </div>
+
         {/* Mock table — greyed out */}
         <div className="divide-y divide-gray-50 opacity-40 pointer-events-none select-none">
           {mockClients.map((client) => (
-            <div key={client.name} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
-              <div className="flex items-center gap-3">
+            <div key={client.name} className="grid items-center gap-4 py-3.5 px-1 first:pt-0 last:pb-0" style={{ gridTemplateColumns: "2fr 2fr 1fr 80px 56px" }}>
+              <div className="flex items-center gap-3 min-w-0">
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
                   style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
                 >
                   {client.name[0]}
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{client.name}</p>
-                  <p className="text-xs text-gray-400">{client.email}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                  <p className="text-xs text-gray-400 truncate">{client.email}</p>
                 </div>
               </div>
-              <div className="hidden sm:block text-xs text-gray-500">{client.service} · {client.plan}</div>
+              <div className="hidden sm:block text-xs text-gray-500 truncate">{client.service} · {client.plan}</div>
               <div className="text-xs font-semibold text-gray-900">SGD {client.mrr.toLocaleString()}/mo</div>
-              <span className="badge-active">{client.status}</span>
+              <div><span className="badge-active">{client.status}</span></div>
               <div className="flex items-center gap-1.5">
                 <button className="p-1.5 rounded-lg hover:bg-amber-50 text-gray-300">
                   <PauseCircle size={14} />
