@@ -9,7 +9,7 @@ async function checkAirwallexConnection(): Promise<boolean> {
     const base =
       process.env.AIRWALLEX_ENV === "prod"
         ? "https://api.airwallex.com"
-        : "https://api-demo.airwallex.com";
+        : "https://api.sandbox.airwallex.com";
 
     const res = await fetch(`${base}/api/v1/authentication/login`, {
       method: "POST",
