@@ -1,12 +1,41 @@
 import { ExternalLink } from "lucide-react";
 
-export default function IntegrationsPage() {
+async function checkAirwallexConnection(): Promise<boolean> {
+  try {
+    const clientId = process.env.AIRWALLEX_CLIENT_ID;
+    const apiKey = process.env.AIRWALLEX_API_KEY;
+    if (!clientId || !apiKey) return false;
+
+    const base =
+      process.env.AIRWALLEX_ENV === "prod"
+        ? "https://api.airwallex.com"
+        : "https://api-demo.airwallex.com";
+
+    const res = await fetch(`${base}/api/v1/authentication/login`, {
+      method: "POST",
+      headers: {
+        "x-client-id": clientId,
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      next: { revalidate: 300 }, // cache for 5 minutes
+    });
+
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export default async function IntegrationsPage() {
+  const airwallexConnected = await checkAirwallexConnection();
+
   const integrations = [
     {
       name: "Xero",
       description: "Sync invoices and contacts automatically with your Xero account.",
       logo: "/logos/xero.webp",
-      status: "pending",
+      connected: false,
       note: "Requires Xero OAuth credentials to activate.",
       docsUrl: "https://developer.xero.com",
     },
@@ -14,15 +43,17 @@ export default function IntegrationsPage() {
       name: "Airwallex",
       description: "Payment processing, subscriptions, and billing management.",
       logo: "/logos/airwallex.png",
-      status: "pending",
-      note: "Credentials pending — contact your Adverdize account manager.",
+      connected: airwallexConnected,
+      note: airwallexConnected
+        ? "Webhooks active. Subscriptions and invoices sync automatically."
+        : "Credentials pending — contact your Adverdize account manager.",
       docsUrl: null,
     },
     {
       name: "Google",
       description: "Sign in with Google SSO for your team members.",
       logo: "/logos/google.png",
-      status: "pending",
+      connected: false,
       note: "Google OAuth credentials pending from client.",
       docsUrl: null,
     },
@@ -53,9 +84,15 @@ export default function IntegrationsPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-gray-900">{integration.name}</p>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">
-                      Pending
-                    </span>
+                    {integration.connected ? (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
+                        Connected
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-100">
+                        Pending
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">{integration.description}</p>
                   <p className="text-xs text-gray-400 mt-2">{integration.note}</p>
@@ -77,7 +114,7 @@ export default function IntegrationsPage() {
                 disabled
                 className="btn-outline text-xs shrink-0 opacity-40 cursor-not-allowed"
               >
-                Connect
+                {integration.connected ? "Manage" : "Connect"}
               </button>
             </div>
           ))}
