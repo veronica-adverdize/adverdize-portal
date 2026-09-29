@@ -1,16 +1,104 @@
-import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, FileText } from "lucide-react";
+import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, FileText, CheckCircle, XCircle } from "lucide-react";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export default function AdminReportsPage() {
+async function getReportsData() {
+  const supabase = createAdminClient();
+
+  // Parallel queries
+  const [orgsResult, subsResult, invoicesResult] = await Promise.all([
+    supabase
+      .from("organisations")
+      .select("id")
+      .neq("id", "00000000-0000-0000-0000-000000000001"),
+    supabase
+      .from("subscriptions")
+      .select("status, cancel_at_period_end, service_prices ( amount, billing_period )")
+      .in("status", ["active", "past_due"]),
+    supabase
+      .from("invoices")
+      .select("amount, currency, status, paid_at")
+      .order("paid_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  const totalClients = orgsResult.data?.length ?? 0;
+
+  const activeSubs = (subsResult.data ?? []).filter(
+    (s: { status: string }) => s.status === "active"
+  );
+  const activeSubCount = activeSubs.length;
+
+  // MRR: sum of active subscriptions' monthly-equivalent amounts
+  const mrr = activeSubs.reduce((sum: number, s: { service_prices?: { amount: number; billing_period: string } | null }) => {
+    if (!s.service_prices) return sum;
+    const { amount, billing_period } = s.service_prices;
+    const monthly =
+      billing_period === "monthly" ? amount :
+      billing_period === "quarterly" ? amount :    // price already per-period; keep as monthly equivalent
+      billing_period === "semi_annual" ? amount :
+      billing_period === "annual" ? amount :
+      amount;
+    return sum + monthly / 100;
+  }, 0);
+
+  // Total revenue from paid invoices
+  const totalRevenue = (invoicesResult.data ?? [])
+    .filter((i: { status: string }) => i.status === "paid")
+    .reduce((sum: number, i: { amount: number }) => sum + i.amount / 100, 0);
+
+  // Cancelling count
+  const cancellingCount = (subsResult.data ?? []).filter(
+    (s: { cancel_at_period_end: boolean }) => s.cancel_at_period_end
+  ).length;
+  const churnRate = activeSubCount > 0
+    ? Math.round((cancellingCount / activeSubCount) * 100)
+    : 0;
+
+  const recentInvoices = (invoicesResult.data ?? []).slice(0, 5);
+
+  return { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices };
+}
+
+export default async function AdminReportsPage() {
+  const { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices } =
+    await getReportsData();
+
+  const hasData = activeSubCount > 0 || totalRevenue > 0;
+
   const stats = [
-    { label: "Monthly Recurring Revenue", abbr: "MRR", icon: DollarSign, color: "#E05C83", bg: "rgba(224,92,131,0.08)" },
-    { label: "Total Revenue (All Time)", abbr: "Revenue", icon: TrendingUp, color: "#F4845F", bg: "rgba(244,132,95,0.08)" },
-    { label: "Active Clients", abbr: "Clients", icon: Users, color: "#16a34a", bg: "rgba(74,222,128,0.08)" },
-    { label: "Churn Rate", abbr: "Churn", icon: ArrowUpRight, color: "#6366f1", bg: "rgba(99,102,241,0.08)" },
+    {
+      label: "Monthly Recurring Revenue",
+      abbr: "MRR",
+      icon: DollarSign,
+      color: "#E05C83",
+      bg: "rgba(224,92,131,0.08)",
+      value: mrr > 0 ? `SGD ${mrr.toLocaleString()}` : "—",
+    },
+    {
+      label: "Total Revenue (All Time)",
+      abbr: "Revenue",
+      icon: TrendingUp,
+      color: "#F4845F",
+      bg: "rgba(244,132,95,0.08)",
+      value: totalRevenue > 0 ? `SGD ${totalRevenue.toLocaleString()}` : "—",
+    },
+    {
+      label: "Active Clients",
+      abbr: "Clients",
+      icon: Users,
+      color: "#16a34a",
+      bg: "rgba(74,222,128,0.08)",
+      value: String(totalClients),
+    },
+    {
+      label: "Churn Rate",
+      abbr: "Churn",
+      icon: ArrowUpRight,
+      color: "#6366f1",
+      bg: "rgba(99,102,241,0.08)",
+      value: activeSubCount > 0 ? `${churnRate}%` : "—",
+    },
   ];
-
-  const mockMonths = ["Apr", "May", "Jun", "Jul", "Aug", "Sep"];
-  const mockValues = [65, 70, 68, 78, 82, 90];
-  const maxVal = Math.max(...mockValues);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -22,7 +110,7 @@ export default function AdminReportsPage() {
 
       {/* Stat tiles */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {stats.map(({ label, abbr, icon: Icon, color, bg }) => (
+        {stats.map(({ label, abbr, icon: Icon, color, bg, value }) => (
           <div key={abbr} className="card p-5">
             <div className="flex items-start justify-between mb-3">
               <p className="text-xs text-gray-400 font-medium">{label}</p>
@@ -30,12 +118,12 @@ export default function AdminReportsPage() {
                 <Icon size={14} style={{ color }} />
               </div>
             </div>
-            <div className="h-7 w-20 bg-gray-100 rounded animate-pulse" />
+            <p className="text-xl font-bold text-gray-900">{value}</p>
           </div>
         ))}
       </div>
 
-      {/* MRR chart placeholder */}
+      {/* MRR chart — placeholder until Airwallex is live */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -50,70 +138,104 @@ export default function AdminReportsPage() {
               <p className="text-xs text-gray-400 mt-0.5">Monthly recurring revenue trend</p>
             </div>
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          {!hasData && (
+            <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
+              AWAITING DATA
+            </span>
+          )}
         </div>
 
-        {/* Placeholder bar chart */}
-        <div className="flex items-end gap-2 h-36 opacity-30 pointer-events-none select-none px-2">
-          {mockMonths.map((month, i) => (
-            <div key={month} className="flex-1 flex flex-col items-center gap-1.5">
-              <div
-                className="w-full rounded-t-md"
-                style={{
-                  height: `${(mockValues[i] / maxVal) * 120}px`,
-                  background: i === mockMonths.length - 1
-                    ? "linear-gradient(180deg, #E05C83, #F4845F)"
-                    : "#E5E7EB",
-                }}
-              />
-              <span className="text-[10px] text-gray-400">{month}</span>
+        {hasData ? (
+          <p className="text-xs text-gray-400 text-center py-8">
+            Revenue chart will render once monthly invoice history builds up.
+          </p>
+        ) : (
+          <>
+            {/* Placeholder bar chart */}
+            <div className="flex items-end gap-2 h-36 opacity-20 pointer-events-none select-none px-2">
+              {[65, 70, 68, 78, 82, 90].map((v, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div
+                    className="w-full rounded-t-md"
+                    style={{
+                      height: `${(v / 90) * 120}px`,
+                      background: i === 5
+                        ? "linear-gradient(180deg, #E05C83, #F4845F)"
+                        : "#E5E7EB",
+                    }}
+                  />
+                  <span className="text-[10px] text-gray-400">
+                    {["Apr","May","Jun","Jul","Aug","Sep"][i]}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        <p className="text-xs text-gray-400 text-center mt-4 pt-4 border-t border-gray-50">
-          Live revenue data will appear here once Airwallex is connected.
-        </p>
+            <p className="text-xs text-gray-400 text-center mt-4 pt-4 border-t border-gray-50">
+              Live revenue data will appear here once clients are subscribed.
+            </p>
+          </>
+        )}
       </div>
 
-      {/* Top services */}
+      {/* Recent invoices */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-5">
           <div
             className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
             style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
           >
-            <TrendingUp size={15} style={{ color: "#F4845F" }} />
+            <FileText size={15} style={{ color: "#F4845F" }} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Top Services by Revenue</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Which packages generate the most MRR</p>
+            <h2 className="text-sm font-semibold text-gray-900">Recent Invoices</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Last payments synced from Airwallex</p>
           </div>
         </div>
 
-        <div className="space-y-3 opacity-30 pointer-events-none select-none">
-          {[
-            { name: "Social Media Management", pct: 100, color: "#E05C83" },
-            { name: "SEO", pct: 79, color: "#F4845F" },
-            { name: "Google Ads", pct: 67, color: "#6366f1" },
-            { name: "Social Media Ads", pct: 54, color: "#10b981" },
-          ].map((service) => (
-            <div key={service.name}>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-gray-600">{service.name}</p>
-                <div className="h-3 w-14 bg-gray-100 rounded" />
+        {recentInvoices.length === 0 ? (
+          <div className="text-center py-8">
+            <FileText size={24} className="mx-auto text-gray-200 mb-2" />
+            <p className="text-sm text-gray-400">No invoices yet.</p>
+            <p className="text-xs text-gray-300 mt-1">Invoices will appear here once clients make payments.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {recentInvoices.map((inv: { status: string; amount: number; currency: string; paid_at: string | null }, idx: number) => (
+              <div key={idx} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center gap-2">
+                  {inv.status === "paid" ? (
+                    <CheckCircle size={14} className="text-green-500 shrink-0" />
+                  ) : (
+                    <XCircle size={14} className="text-red-400 shrink-0" />
+                  )}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">
+                      {inv.currency} {(inv.amount / 100).toLocaleString()}
+                    </p>
+                    {inv.paid_at && (
+                      <p className="text-xs text-gray-400">
+                        {new Date(inv.paid_at).toLocaleDateString("en-SG", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <span
+                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${
+                    inv.status === "paid"
+                      ? "bg-green-50 text-green-600 border-green-100"
+                      : inv.status === "open"
+                      ? "bg-amber-50 text-amber-600 border-amber-100"
+                      : "bg-red-50 text-red-500 border-red-100"
+                  }`}
+                >
+                  {inv.status}
+                </span>
               </div>
-              <div className="h-2 w-full rounded-full bg-gray-100">
-                <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${service.pct}%`, backgroundColor: service.color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Xero sync */}
