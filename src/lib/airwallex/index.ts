@@ -1,7 +1,7 @@
 const AIRWALLEX_BASE =
   process.env.AIRWALLEX_ENV === "prod"
     ? "https://api.airwallex.com"
-    : "https://api-demo.airwallex.com";
+    : "https://api.sandbox.airwallex.com";
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
