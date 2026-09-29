@@ -1,5 +1,7 @@
 import { ExternalLink } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function checkAirwallexConnection(): Promise<boolean> {
   try {
     const clientId = process.env.AIRWALLEX_CLIENT_ID;
@@ -18,7 +20,7 @@ async function checkAirwallexConnection(): Promise<boolean> {
         "x-api-key": apiKey,
         "Content-Type": "application/json",
       },
-      next: { revalidate: 300 }, // cache for 5 minutes
+      cache: "no-store",
     });
 
     return res.ok;
