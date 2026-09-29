@@ -71,11 +71,13 @@ export async function createBillingCheckout(params: {
   successUrl: string;
   cancelUrl: string;
   promoCode?: string;
+  embedded?: boolean;
 }) {
   return airwallexFetch("/api/v1/billing/checkout_sessions", {
     method: "POST",
     body: JSON.stringify({
       mode: "SUBSCRIPTION",
+      ui_mode: params.embedded ? "EMBEDDED" : "HOSTED",
       customer_id: params.customerId,
       line_items: [{ price: params.priceId, quantity: 1 }],
       success_url: params.successUrl,
@@ -140,15 +142,22 @@ export async function createCustomerPortalSession(params: {
 
 export function verifyWebhookSignature(
   payload: string,
-  signature: string
+  signature: string,
+  timestamp: string
 ): boolean {
+  // Airwallex signs: HMAC-SHA256(timestamp + rawBody, secret) → hex
   const crypto = require("crypto");
   const expected = crypto
     .createHmac("sha256", process.env.AIRWALLEX_WEBHOOK_SECRET!)
-    .update(payload)
+    .update(timestamp + payload)
     .digest("hex");
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expected)
+    );
+  } catch {
+    // Buffers differ in length — signature is invalid
+    return false;
+  }
 }

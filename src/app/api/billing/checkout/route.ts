@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { price_id, promo_code } = body;
+  const { price_id, promo_code, embedded } = body;
 
   if (!price_id) {
     return NextResponse.json({ error: "price_id is required" }, { status: 400 });
@@ -63,7 +63,12 @@ export async function POST(request: NextRequest) {
     successUrl: `${appUrl}/dashboard/billing?success=1`,
     cancelUrl: `${appUrl}/dashboard/services`,
     promoCode: promo_code,
+    embedded: !!embedded,
   });
+
+  if (embedded) {
+    return NextResponse.json({ client_secret: session.client_secret });
+  }
 
   return NextResponse.json({ url: session.url });
 }

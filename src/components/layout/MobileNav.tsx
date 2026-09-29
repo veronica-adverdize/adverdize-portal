@@ -85,7 +85,7 @@ export default function MobileNav({ role, userName, orgName }: MobileNavProps) {
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-              style={{ background: "linear-gradient(135deg, #E8405A, #F4845F)" }}
+              style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
             >
               {userName?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "?"}
             </div>
@@ -141,7 +141,7 @@ export default function MobileNav({ role, userName, orgName }: MobileNavProps) {
               >
                 <Icon
                   size={20}
-                  style={active ? { color: "#E8405A" } : { color: "#9ca3af" }}
+                  style={active ? { color: "#E05C83" } : { color: "#9ca3af" }}
                 />
                 <span className={clsx("text-[10px] font-medium", active ? "text-brand-pink" : "text-gray-400")}>
                   {item.label}
