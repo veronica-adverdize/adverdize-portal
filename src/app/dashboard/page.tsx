@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { Package, CreditCard, ArrowRight, CheckCircle2, BarChart3, Zap, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default async function DashboardPage() {
+  noStore();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -16,7 +18,7 @@ export default async function DashboardPage() {
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("*, service:service_packages(*), price:service_prices(*)")
+    .select("*, service:service_packages(*), price:service_prices!price_id(*)")
     .eq("organisation_id", profile?.organisation_id)
     .eq("status", "active");
 
