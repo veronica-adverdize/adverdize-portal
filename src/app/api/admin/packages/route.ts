@@ -11,7 +11,7 @@ export async function GET() {
   const adminClient = createAdminClient();
   const { data: raw } = await adminClient
     .from("service_packages")
-    .select(`id, name, description, features, is_active, service_prices (id, billing_period, amount, currency, airwallex_price_id, is_active)`)
+    .select(`id, name, description, features, is_active, service_prices!service_id (id, billing_period, amount, currency, airwallex_price_id, is_active)`)
     .order("name");
 
   // Rename service_prices → prices so the client component can use a consistent shape

@@ -60,7 +60,7 @@ export default function CheckoutPage() {
     const supabase = createClient();
     supabase
       .from("service_packages")
-      .select("*, prices:service_prices(*)")
+      .select("*, prices:service_prices!service_id(*)")
       .eq("id", serviceId)
       .eq("is_active", true)
       .single()

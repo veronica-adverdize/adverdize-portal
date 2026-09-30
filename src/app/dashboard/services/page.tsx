@@ -91,7 +91,7 @@ export default function ServicesPage() {
 
       const { data: pkgs } = await supabase
         .from("service_packages")
-        .select("*, prices:service_prices(*)")
+        .select("*, prices:service_prices!service_id(*)")
         .eq("is_active", true)
         .order("created_at");
 

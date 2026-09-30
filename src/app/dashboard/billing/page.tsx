@@ -23,7 +23,7 @@ export default async function BillingPage({
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("*, service:service_packages(*), price:service_prices(*)")
+    .select("*, service:service_packages(*), price:service_prices!service_id(*)")
     .eq("organisation_id", profile?.organisation_id)
     .in("status", ["active", "past_due", "trialing"]);
 
