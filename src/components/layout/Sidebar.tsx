@@ -130,7 +130,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-gray-100">
-        <p className="text-[10px] text-gray-300">© 2026 Adverdize</p>
+        <p className="text-[10px] text-gray-300">Copyright © 2026 Adverdize Cloud Pte Ltd</p>
       </div>
     </aside>
   );

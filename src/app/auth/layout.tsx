@@ -184,7 +184,7 @@ export default function AuthLayout({
           </div>{/* end center block */}
 
           {/* Footer */}
-          <p className="text-[10px] text-gray-300 mt-auto pt-4">© 2026 Adverdize. All rights reserved.</p>
+          <p className="text-[10px] text-gray-300 mt-auto pt-4">Copyright © 2026 Adverdize Cloud Pte Ltd. All rights reserved.</p>
         </div>
       </div>
 
