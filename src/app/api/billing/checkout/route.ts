@@ -33,14 +33,21 @@ export async function POST(request: NextRequest) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  const checkout = await createBillingCheckout({
-    priceId: price.airwallex_price_id,
-    successUrl: `${appUrl}/dashboard/billing?success=1`,
-    backUrl: `${appUrl}/dashboard/services`,
-  });
+  let checkout;
+  try {
+    checkout = await createBillingCheckout({
+      priceId: price.airwallex_price_id,
+      successUrl: `${appUrl}/dashboard/billing?success=1`,
+      backUrl: `${appUrl}/dashboard/services`,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Unknown error";
+    console.error("[checkout] Airwallex error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 
   if (!checkout?.url) {
-    return NextResponse.json({ error: "Failed to create checkout" }, { status: 500 });
+    return NextResponse.json({ error: "No checkout URL returned from Airwallex" }, { status: 500 });
   }
 
   return NextResponse.json({ url: checkout.url });
