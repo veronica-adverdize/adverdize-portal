@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import CancelButton from "@/components/billing/CancelButton";
@@ -10,6 +11,7 @@ export default async function BillingPage({
 }: {
   searchParams: Promise<{ success?: string }>;
 }) {
+  noStore();
   const params = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,7 +25,7 @@ export default async function BillingPage({
 
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select("*, service:service_packages(*), price:service_prices!service_id(*)")
+    .select("*, service:service_packages(*), price:service_prices!price_id(*)")
     .eq("organisation_id", profile?.organisation_id)
     .in("status", ["active", "past_due", "trialing"]);
 
@@ -95,14 +97,16 @@ export default async function BillingPage({
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 shrink-0">
-                    Renews{" "}
-                    {new Date(sub.current_period_end).toLocaleDateString("en-SG", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
+                  {sub.current_period_end && (
+                    <p className="text-xs text-gray-400 shrink-0">
+                      Renews{" "}
+                      {new Date(sub.current_period_end).toLocaleDateString("en-SG", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
+                  )}
                 </div>
 
                 {sub.cancel_at_period_end && (
