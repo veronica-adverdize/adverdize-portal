@@ -23,38 +23,43 @@ async function getReportsData() {
 
   const totalClients = orgsResult.data?.length ?? 0;
 
-  const activeSubs = (subsResult.data ?? []).filter(
-    (s: { status: string }) => s.status === "active"
-  );
+  type SubRow = {
+    status: string;
+    cancel_at_period_end: boolean;
+    service_prices: { amount: number; billing_period: string } | null;
+  };
+
+  type InvoiceRow = {
+    amount: number;
+    currency: string;
+    status: string;
+    paid_at: string | null;
+  };
+
+  const allSubs: SubRow[] = (subsResult.data ?? []) as SubRow[];
+  const allInvoices: InvoiceRow[] = (invoicesResult.data ?? []) as InvoiceRow[];
+
+  const activeSubs = allSubs.filter((s) => s.status === "active");
   const activeSubCount = activeSubs.length;
 
   // MRR: sum of active subscriptions' monthly-equivalent amounts
-  const mrr = activeSubs.reduce((sum: number, s: { service_prices?: { amount: number; billing_period: string } | null }) => {
+  const mrr = activeSubs.reduce((sum, s) => {
     if (!s.service_prices) return sum;
-    const { amount, billing_period } = s.service_prices;
-    const monthly =
-      billing_period === "monthly" ? amount :
-      billing_period === "quarterly" ? amount :    // price already per-period; keep as monthly equivalent
-      billing_period === "semi_annual" ? amount :
-      billing_period === "annual" ? amount :
-      amount;
-    return sum + monthly / 100;
+    return sum + s.service_prices.amount / 100;
   }, 0);
 
   // Total revenue from paid invoices
-  const totalRevenue = (invoicesResult.data ?? [])
-    .filter((i: { status: string }) => i.status === "paid")
-    .reduce((sum: number, i: { amount: number }) => sum + i.amount / 100, 0);
+  const totalRevenue = allInvoices
+    .filter((i) => i.status === "paid")
+    .reduce((sum, i) => sum + i.amount / 100, 0);
 
   // Cancelling count
-  const cancellingCount = (subsResult.data ?? []).filter(
-    (s: { cancel_at_period_end: boolean }) => s.cancel_at_period_end
-  ).length;
+  const cancellingCount = allSubs.filter((s) => s.cancel_at_period_end).length;
   const churnRate = activeSubCount > 0
     ? Math.round((cancellingCount / activeSubCount) * 100)
     : 0;
 
-  const recentInvoices = (invoicesResult.data ?? []).slice(0, 5);
+  const recentInvoices: InvoiceRow[] = allInvoices.slice(0, 5);
 
   return { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices };
 }
@@ -200,7 +205,7 @@ export default async function AdminReportsPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
-            {recentInvoices.map((inv: { status: string; amount: number; currency: string; paid_at: string | null }, idx: number) => (
+            {recentInvoices.map((inv, idx) => (
               <div key={idx} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                 <div className="flex items-center gap-2">
                   {inv.status === "paid" ? (

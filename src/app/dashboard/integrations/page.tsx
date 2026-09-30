@@ -23,11 +23,6 @@ async function checkAirwallexConnection(): Promise<boolean> {
       cache: "no-store",
     });
 
-    const body = await res.json().catch(() => ({}));
-    console.log("[Airwallex] base:", base);
-    console.log("[Airwallex] status:", res.status, res.statusText);
-    console.log("[Airwallex] response:", JSON.stringify(body));
-
     return res.ok;
   } catch {
     return false;

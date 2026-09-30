@@ -26,11 +26,27 @@ async function getClientsData() {
     .neq("id", "00000000-0000-0000-0000-000000000001") // exclude Adverdize internal org
     .order("name");
 
+  type SubPrice = {
+    amount: number;
+    currency: string;
+    billing_period: string;
+    service_packages: { name: string } | null;
+  };
+
+  type OrgSub = {
+    id: string;
+    status: string;
+    cancel_at_period_end: boolean;
+    current_period_end: string | null;
+    service_prices: SubPrice | null;
+  };
+
   const clients = (orgs ?? []).map((org) => {
-    const activeSub = org.subscriptions?.find(
-      (s: { status: string }) => s.status === "active" || s.status === "past_due"
+    const subs = (org.subscriptions ?? []) as OrgSub[];
+    const activeSub = subs.find(
+      (s) => s.status === "active" || s.status === "past_due"
     );
-    const price = (activeSub as { service_prices?: { amount: number; currency: string; billing_period: string; service_packages?: { name: string } } } | undefined)?.service_prices;
+    const price = activeSub?.service_prices ?? null;
     const mrr = price ? price.amount / 100 : null;
     const billingPeriod = price?.billing_period ?? null;
     const packageName = price?.service_packages?.name ?? null;
