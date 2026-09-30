@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  createAirwallexCustomer,
-  createBillingCheckout,
-} from "@/lib/airwallex";
+import { createBillingCheckout } from "@/lib/airwallex";
 import { rateLimit, CHECKOUT_RATE_LIMIT } from "@/lib/utils/rate-limit";
 
 export async function POST(request: NextRequest) {
@@ -17,7 +14,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { price_id, promo_code, embedded } = body;
+  const { price_id } = body;
 
   if (!price_id) {
     return NextResponse.json({ error: "price_id is required" }, { status: 400 });
@@ -30,46 +27,21 @@ export async function POST(request: NextRequest) {
     .eq("is_active", true)
     .single();
 
-  if (!price) {
+  if (!price?.airwallex_price_id) {
     return NextResponse.json({ error: "Invalid price" }, { status: 400 });
-  }
-
-  const { data: profile } = await supabase
-    .from("users")
-    .select("*, organisation:organisations(*)")
-    .eq("id", user.id)
-    .single();
-
-  let airwallexCustomerId = profile?.organisation?.airwallex_customer_id;
-
-  if (!airwallexCustomerId) {
-    const customer = await createAirwallexCustomer({
-      email: user.email!,
-      name: profile?.organisation?.name ?? profile?.full_name ?? user.email!,
-      merchantCustomerId: user.id,
-    });
-    airwallexCustomerId = customer.id;
-
-    await supabase
-      .from("organisations")
-      .update({ airwallex_customer_id: airwallexCustomerId })
-      .eq("id", profile?.organisation_id);
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  const session = await createBillingCheckout({
-    customerId: airwallexCustomerId,
+  const checkout = await createBillingCheckout({
     priceId: price.airwallex_price_id,
     successUrl: `${appUrl}/dashboard/billing?success=1`,
-    cancelUrl: `${appUrl}/dashboard/services`,
-    promoCode: promo_code,
-    embedded: !!embedded,
+    backUrl: `${appUrl}/dashboard/services`,
   });
 
-  if (embedded) {
-    return NextResponse.json({ client_secret: session.client_secret });
+  if (!checkout?.url) {
+    return NextResponse.json({ error: "Failed to create checkout" }, { status: 500 });
   }
 
-  return NextResponse.json({ url: session.url });
+  return NextResponse.json({ url: checkout.url });
 }

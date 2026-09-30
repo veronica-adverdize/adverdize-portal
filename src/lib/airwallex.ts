@@ -74,24 +74,29 @@ export async function createAirwallexCustomer(params: {
 }
 
 export async function createBillingCheckout(params: {
-  customerId: string;
   priceId: string;
   successUrl: string;
-  cancelUrl: string;
-  promoCode?: string;
-  embedded?: boolean;
+  backUrl: string;
+  billingCustomerId?: string;
 }) {
+  const requestId = crypto.randomUUID();
   const body: Record<string, unknown> = {
-    customer_id: params.customerId,
-    mode: "subscription",
-    line_items: [{ price: params.priceId, quantity: 1 }],
+    request_id: requestId,
+    mode: "SUBSCRIPTION",
     success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
+    back_url: params.backUrl,
+    line_items: [{ price_id: params.priceId, quantity: 1 }],
   };
-  if (params.promoCode) {
-    body.discounts = [{ coupon: params.promoCode }];
+  if (params.billingCustomerId) {
+    body.billing_customer_id = params.billingCustomerId;
   }
-  return airwallexFetch("/api/v1/checkout/sessions/create", {
+  if (process.env.AIRWALLEX_LEGAL_ENTITY_ID) {
+    body.legal_entity_id = process.env.AIRWALLEX_LEGAL_ENTITY_ID;
+  }
+  if (process.env.AIRWALLEX_PAYMENT_ACCOUNT_ID) {
+    body.linked_payment_account_id = process.env.AIRWALLEX_PAYMENT_ACCOUNT_ID;
+  }
+  return airwallexFetch("/api/v1/billing/billing_checkouts/create", {
     method: "POST",
     body: JSON.stringify(body),
   });
