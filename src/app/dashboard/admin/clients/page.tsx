@@ -1,4 +1,5 @@
-import { Users, TrendingUp, DollarSign, PauseCircle, XCircle, Package } from "lucide-react";
+import { Users, TrendingUp, DollarSign, Package } from "lucide-react";
+import AdminSubscriptionActions from "@/components/admin/AdminSubscriptionActions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 async function getClientsData() {
@@ -57,6 +58,7 @@ async function getClientsData() {
       id: org.id,
       name: org.name,
       airwallexCustomerId: org.airwallex_customer_id,
+      subscriptionId: activeSub?.id ?? null,
       packageName,
       billingPeriod,
       mrr,
@@ -237,22 +239,11 @@ export default async function AdminClientsPage() {
                     <StatusBadge status={client.status} cancelAtPeriodEnd={client.cancelAtPeriodEnd} />
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      disabled
-                      title="Pause subscription (coming soon)"
-                      className="p-1.5 rounded-lg text-gray-300 opacity-40 cursor-not-allowed"
-                    >
-                      <PauseCircle size={14} />
-                    </button>
-                    <button
-                      disabled
-                      title="Cancel subscription (coming soon)"
-                      className="p-1.5 rounded-lg text-gray-300 opacity-40 cursor-not-allowed"
-                    >
-                      <XCircle size={14} />
-                    </button>
-                  </div>
+                  <AdminSubscriptionActions
+                    subscriptionId={client.subscriptionId ?? undefined}
+                    cancelAtPeriodEnd={client.cancelAtPeriodEnd}
+                    status={client.status}
+                  />
                 </div>
               ))}
             </div>
@@ -271,14 +262,13 @@ export default async function AdminClientsPage() {
           </div>
           <div>
             <h2 className="text-sm font-semibold text-gray-900">Admin Controls — Coming Soon</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Full client management once Airwallex is live</p>
+            <p className="text-xs text-gray-400 mt-0.5">More client management features on the way</p>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             "View client details",
             "Pause subscriptions",
-            "Cancel subscriptions",
             "Assign services",
             "Apply promo codes",
             "View client invoices",

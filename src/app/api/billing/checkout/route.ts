@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
   if (!airwallexCustomerId) {
     const customer = await createAirwallexCustomer({
       email: user.email!,
-      name: profile?.organisation?.name ?? profile?.full_name,
+      name: profile?.organisation?.name ?? profile?.full_name ?? user.email!,
+      merchantCustomerId: user.id,
     });
     airwallexCustomerId = customer.id;
 

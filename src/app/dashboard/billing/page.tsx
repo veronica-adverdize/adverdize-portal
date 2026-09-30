@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCircle } from "lucide-react";
+import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import CancelButton from "@/components/billing/CancelButton";
 import PortalButton from "@/components/billing/PortalButton";
@@ -26,6 +26,13 @@ export default async function BillingPage({
     .select("*, service:service_packages(*), price:service_prices(*)")
     .eq("organisation_id", profile?.organisation_id)
     .in("status", ["active", "past_due", "trialing"]);
+
+  const { data: recentInvoices } = await supabase
+    .from("invoices")
+    .select("id, amount, currency, status, paid_at, invoice_url")
+    .eq("organisation_id", profile?.organisation_id)
+    .order("created_at", { ascending: false })
+    .limit(3);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -262,24 +269,58 @@ export default async function BillingPage({
           </Link>
         </div>
 
-        {/* Placeholder invoice rows */}
-        <div className="divide-y divide-gray-50 opacity-40 pointer-events-none select-none">
-          {["Sep 2026", "Aug 2026", "Jul 2026"].map((month) => (
-            <div key={month} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-              <div>
-                <p className="text-sm font-medium text-gray-900">Social Media Management — Monthly</p>
-                <p className="text-xs text-gray-400 mt-0.5">{month}</p>
+        {(recentInvoices?.length ?? 0) === 0 ? (
+          <div className="divide-y divide-gray-50 opacity-30 pointer-events-none select-none">
+            {["Sep 2026", "Aug 2026", "Jul 2026"].map((month) => (
+              <div key={month} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">Social Media Management — Monthly</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{month}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-gray-900">SGD 1,200</span>
+                  <span className="badge-active">Paid</span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-gray-900">SGD 1,200</span>
-                <span className="badge-active">Paid</span>
+            ))}
+            <p className="text-xs text-gray-400 text-center mt-4 pt-1">
+              Invoices appear here once your first payment is processed.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {recentInvoices!.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {inv.currency} {(inv.amount / 100).toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {inv.paid_at
+                      ? new Date(inv.paid_at).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })
+                      : "Pending"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={inv.status === "paid" ? "badge-active" : "badge-warning"}>
+                    {inv.status}
+                  </span>
+                  {inv.invoice_url && (
+                    <a
+                      href={inv.invoice_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs hover:underline"
+                      style={{ color: "#E05C83" }}
+                    >
+                      View <ExternalLink size={11} />
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 text-center mt-4">
-          Invoice history will be available once Airwallex is connected to your account.
-        </p>
+            ))}
+          </div>
+        )}
       </div>
 
     </div>

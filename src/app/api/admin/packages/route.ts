@@ -9,10 +9,17 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const adminClient = createAdminClient();
-  const { data } = await adminClient
+  const { data: raw } = await adminClient
     .from("service_packages")
     .select(`id, name, description, features, is_active, service_prices (id, billing_period, amount, currency, airwallex_price_id, is_active)`)
     .order("name");
+
+  // Rename service_prices → prices so the client component can use a consistent shape
+  const data = (raw ?? []).map((pkg) => ({
+    ...pkg,
+    prices: (pkg as Record<string, unknown>).service_prices ?? [],
+    service_prices: undefined,
+  }));
 
   return NextResponse.json(data ?? []);
 }
@@ -30,7 +37,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: profile } = await supabase
-    .from("user_profiles")
+    .from("users")
     .select("role")
     .eq("id", user.id)
     .single();

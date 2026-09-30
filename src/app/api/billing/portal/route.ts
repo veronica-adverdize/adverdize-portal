@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
   // Look up customer_id from the user's own org — never trust it from the client
   const { data: profile } = await supabase
-    .from("user_profiles")
+    .from("users")
     .select("organisation_id")
     .eq("id", user.id)
     .single();
