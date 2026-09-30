@@ -26,7 +26,7 @@ async function getReportsData() {
   type SubRow = {
     status: string;
     cancel_at_period_end: boolean;
-    service_prices: { amount: number; billing_period: string } | null;
+    service_prices: { amount: number; billing_period: string }[] | null;
   };
 
   type InvoiceRow = {
@@ -36,16 +36,18 @@ async function getReportsData() {
     paid_at: string | null;
   };
 
-  const allSubs: SubRow[] = (subsResult.data ?? []) as SubRow[];
-  const allInvoices: InvoiceRow[] = (invoicesResult.data ?? []) as InvoiceRow[];
+  const allSubs = (subsResult.data ?? []) as unknown as SubRow[];
+  const allInvoices = (invoicesResult.data ?? []) as unknown as InvoiceRow[];
 
   const activeSubs = allSubs.filter((s) => s.status === "active");
   const activeSubCount = activeSubs.length;
 
   // MRR: sum of active subscriptions' monthly-equivalent amounts
+  // service_prices is an array from the join; take the first entry
   const mrr = activeSubs.reduce((sum, s) => {
-    if (!s.service_prices) return sum;
-    return sum + s.service_prices.amount / 100;
+    const price = Array.isArray(s.service_prices) ? s.service_prices[0] : null;
+    if (!price) return sum;
+    return sum + price.amount / 100;
   }, 0);
 
   // Total revenue from paid invoices
