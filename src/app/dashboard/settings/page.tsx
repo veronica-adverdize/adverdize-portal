@@ -1,8 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { User, Building2, Lock, Settings2, AlertTriangle, Chrome, Bell } from "lucide-react";
+import { unstable_noStore as noStore } from "next/cache";
 
 export default async function SettingsPage() {
+  noStore();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
