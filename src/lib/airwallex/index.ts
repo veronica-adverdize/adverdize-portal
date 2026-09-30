@@ -1,66 +1,54 @@
-const AIRWALLEX_BASE =
+const BASE_URL =
   process.env.AIRWALLEX_ENV === "prod"
     ? "https://api.airwallex.com"
     : "https://api.sandbox.airwallex.com";
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
-
-async function getAccessToken(): Promise<string> {
-  if (cachedToken && Date.now() < cachedToken.expiresAt - 60_000) {
-    return cachedToken.token;
-  }
-
-  const res = await fetch(`${AIRWALLEX_BASE}/api/v1/authentication/login`, {
+async function getToken(): Promise<string> {
+  const res = await fetch(`${BASE_URL}/api/v1/authentication/login`, {
     method: "POST",
     headers: {
       "x-client-id": process.env.AIRWALLEX_CLIENT_ID!,
       "x-api-key": process.env.AIRWALLEX_API_KEY!,
       "Content-Type": "application/json",
     },
+    cache: "no-store",
   });
-
   if (!res.ok) {
-    throw new Error(`Airwallex auth failed: ${res.status}`);
+    const text = await res.text();
+    throw new Error(`Airwallex auth failed: ${res.status} ${text}`);
   }
-
   const data = await res.json();
-  cachedToken = {
-    token: data.token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  };
-
-  return cachedToken.token;
+  return data.token;
 }
 
 async function airwallexFetch(path: string, options: RequestInit = {}) {
-  const token = await getAccessToken();
-
-  const res = await fetch(`${AIRWALLEX_BASE}${path}`, {
+  const token = await getToken();
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
-      ...options.headers,
+      ...(options.headers ?? {}),
     },
   });
-
   if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || `Airwallex API error: ${res.status}`);
+    const text = await res.text();
+    throw new Error(`Airwallex API error ${res.status}: ${text}`);
   }
-
   return res.json();
 }
 
 export async function createAirwallexCustomer(params: {
   email: string;
   name: string;
+  merchantCustomerId: string;
 }) {
-  return airwallexFetch("/api/v1/billing/customers", {
+  return airwallexFetch("/api/v1/customers/create", {
     method: "POST",
     body: JSON.stringify({
       email: params.email,
-      name: params.name,
+      full_name: params.name,
+      merchant_customer_id: params.merchantCustomerId,
     }),
   });
 }
@@ -73,30 +61,28 @@ export async function createBillingCheckout(params: {
   promoCode?: string;
   embedded?: boolean;
 }) {
-  return airwallexFetch("/api/v1/billing/checkout_sessions", {
+  const body: Record<string, unknown> = {
+    customer_id: params.customerId,
+    mode: "subscription",
+    line_items: [{ price: params.priceId, quantity: 1 }],
+    success_url: params.successUrl,
+    cancel_url: params.cancelUrl,
+  };
+  if (params.promoCode) {
+    body.discounts = [{ coupon: params.promoCode }];
+  }
+  return airwallexFetch("/api/v1/checkout/sessions/create", {
     method: "POST",
-    body: JSON.stringify({
-      mode: "SUBSCRIPTION",
-      ui_mode: params.embedded ? "EMBEDDED" : "HOSTED",
-      customer_id: params.customerId,
-      line_items: [{ price: params.priceId, quantity: 1 }],
-      success_url: params.successUrl,
-      cancel_url: params.cancelUrl,
-      ...(params.promoCode && { promotion_code: params.promoCode }),
-    }),
+    body: JSON.stringify(body),
   });
 }
 
-export async function getSubscription(subscriptionId: string) {
-  return airwallexFetch(`/api/v1/billing/subscriptions/${subscriptionId}`);
-}
-
 export async function cancelSubscription(
-  subscriptionId: string,
-  atPeriodEnd = true
+  airwallexSubscriptionId: string,
+  atPeriodEnd: boolean = true
 ) {
   return airwallexFetch(
-    `/api/v1/billing/subscriptions/${subscriptionId}/cancel`,
+    `/api/v1/recurring/subscriptions/${airwallexSubscriptionId}/cancel`,
     {
       method: "POST",
       body: JSON.stringify({ cancel_at_period_end: atPeriodEnd }),
@@ -104,60 +90,50 @@ export async function cancelSubscription(
   );
 }
 
-export async function upgradeSubscription(params: {
-  subscriptionId: string;
-  newPriceId: string;
-  prorationBehavior?: string;
-}) {
-  return airwallexFetch(
-    `/api/v1/billing/subscriptions/${params.subscriptionId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({
-        items: [{ price: params.newPriceId, quantity: 1 }],
-        proration_behavior: params.prorationBehavior ?? "CREATE_PRORATIONS",
-      }),
-    }
-  );
+export async function createProduct(params: { name: string; description?: string }) {
+  return airwallexFetch("/api/v1/products/create", {
+    method: "POST",
+    body: JSON.stringify({
+      name: params.name,
+      description: params.description ?? "",
+      type: "service",
+    }),
+  });
 }
 
-export async function listInvoices(customerId: string) {
-  return airwallexFetch(
-    `/api/v1/billing/invoices?customer_id=${customerId}&page_size=20`
-  );
+export async function createPrice(params: {
+  productId: string;
+  amount: number;
+  currency: string;
+  billingPeriod: "monthly" | "quarterly" | "semi_annual" | "annual";
+}) {
+  const intervalMap: Record<string, { interval: string; interval_count: number }> = {
+    monthly: { interval: "month", interval_count: 1 },
+    quarterly: { interval: "month", interval_count: 3 },
+    semi_annual: { interval: "month", interval_count: 6 },
+    annual: { interval: "year", interval_count: 1 },
+  };
+  const { interval, interval_count } = intervalMap[params.billingPeriod];
+  return airwallexFetch("/api/v1/prices/create", {
+    method: "POST",
+    body: JSON.stringify({
+      product_id: params.productId,
+      unit_amount: params.amount,
+      currency: params.currency,
+      recurring: { interval, interval_count },
+    }),
+  });
 }
 
 export async function createCustomerPortalSession(params: {
   customerId: string;
   returnUrl: string;
 }) {
-  return airwallexFetch("/api/v1/billing/portal_sessions", {
+  return airwallexFetch("/api/v1/portal/sessions/create", {
     method: "POST",
     body: JSON.stringify({
       customer_id: params.customerId,
       return_url: params.returnUrl,
     }),
   });
-}
-
-export function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-  timestamp: string
-): boolean {
-  // Airwallex signs: HMAC-SHA256(timestamp + rawBody, secret) → hex
-  const crypto = require("crypto");
-  const expected = crypto
-    .createHmac("sha256", process.env.AIRWALLEX_WEBHOOK_SECRET!)
-    .update(timestamp + payload)
-    .digest("hex");
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected)
-    );
-  } catch {
-    // Buffers differ in length — signature is invalid
-    return false;
-  }
 }
