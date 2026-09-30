@@ -86,6 +86,7 @@ export async function createBillingCheckout(params: {
     success_url: params.successUrl,
     back_url: params.backUrl,
     line_items: [{ price_id: params.priceId, quantity: 1 }],
+    subscription_data: {},
   };
   if (params.billingCustomerId) {
     body.billing_customer_id = params.billingCustomerId;

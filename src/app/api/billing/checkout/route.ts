@@ -31,9 +31,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid price" }, { status: 400 });
   }
 
-  // Derive base URL from the incoming request so it works on any domain
-  const origin = request.headers.get("origin") ?? request.nextUrl.origin;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin;
+  // Derive base URL — try env first, then request origin, then nextUrl
+  const origin = request.headers.get("origin")
+    ?? `${request.nextUrl.protocol}//${request.nextUrl.host}`;
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? origin).replace(/\/$/, "");
+  console.log("[checkout] appUrl:", appUrl);
 
   let checkout;
   try {
