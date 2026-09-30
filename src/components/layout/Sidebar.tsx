@@ -95,7 +95,7 @@ export default function Sidebar({ role }: SidebarProps) {
       <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
         {nav.map((group) => (
           <div key={group.section}>
-            <p className="text-[10px] font-semibold text-gray-300 tracking-widest px-3 mb-1.5">
+            <p className="text-[10px] font-semibold text-gray-400 tracking-widest px-3 mb-1.5">
               {group.section}
             </p>
             <div className="space-y-0.5">
@@ -114,7 +114,7 @@ export default function Sidebar({ role }: SidebarProps) {
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       active
                         ? "text-[#E05C83]"
-                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                     )}
                     style={active ? { backgroundColor: "rgba(224,92,131,0.08)" } : {}}
                   >
@@ -130,7 +130,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-4 py-4 border-t border-gray-100">
-        <p className="text-[10px] text-gray-300">Copyright © 2026 Adverdize Cloud Pte Ltd</p>
+        <p className="text-[10px] text-gray-400">© 2026 Adverdize Cloud Pte Ltd</p>
       </div>
     </aside>
   );
