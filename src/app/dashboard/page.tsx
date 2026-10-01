@@ -70,21 +70,28 @@ export default async function DashboardPage() {
 
         <div className="card p-5">
           <div className="flex items-start justify-between">
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-400 font-medium">Next Billing</p>
-              {subscriptions && subscriptions.length > 0 && subscriptions[0].current_period_end ? (
-                <>
-                  <p className="text-lg font-display font-bold text-gray-900 mt-1">
-                    {new Date(subscriptions[0].current_period_end).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    SGD {((subscriptions[0] as { price?: { amount?: number } }).price?.amount ? ((subscriptions[0] as { price?: { amount?: number } }).price!.amount! / 100).toLocaleString() : "—")}
-                  </p>
-                </>
+              {subscriptions && subscriptions.length > 0 ? (
+                <div className="mt-1 space-y-2">
+                  {subscriptions
+                    .filter((s) => s.current_period_end)
+                    .sort((a, b) => new Date(a.current_period_end).getTime() - new Date(b.current_period_end).getTime())
+                    .map((sub) => (
+                      <div key={sub.id}>
+                        <p className="text-sm font-display font-bold text-gray-900">
+                          {new Date(sub.current_period_end).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {sub.service?.name ?? "Subscription"} · SGD {sub.price?.amount != null ? (sub.price.amount / 100).toLocaleString() : "—"}
+                        </p>
+                      </div>
+                    ))}
+                </div>
               ) : (
                 <>
                   <p className="text-lg font-display font-bold text-gray-900 mt-1">—</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{activeCount > 0 ? "Billing date pending" : "No active subscription"}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">No active subscription</p>
                 </>
               )}
             </div>
