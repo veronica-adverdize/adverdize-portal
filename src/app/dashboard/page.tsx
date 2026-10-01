@@ -62,8 +62,21 @@ export default async function DashboardPage() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs text-gray-400 font-medium">Next Billing</p>
-              <p className="text-lg font-display font-bold text-gray-900 mt-1">—</p>
-              <p className="text-xs text-gray-400 mt-0.5">Available after Airwallex setup</p>
+              {subscriptions && subscriptions.length > 0 && subscriptions[0].current_period_end ? (
+                <>
+                  <p className="text-lg font-display font-bold text-gray-900 mt-1">
+                    {new Date(subscriptions[0].current_period_end).toLocaleDateString("en-SG", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    SGD {((subscriptions[0] as { price?: { amount?: number } }).price?.amount ? ((subscriptions[0] as { price?: { amount?: number } }).price!.amount! / 100).toLocaleString() : "—")}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-display font-bold text-gray-900 mt-1">—</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{activeCount > 0 ? "Billing date pending" : "No active subscription"}</p>
+                </>
+              )}
             </div>
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"

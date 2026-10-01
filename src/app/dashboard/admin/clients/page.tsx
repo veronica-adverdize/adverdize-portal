@@ -16,11 +16,11 @@ async function getClientsData() {
         status,
         cancel_at_period_end,
         current_period_end,
-        service_prices (
+        price:service_prices!price_id (
           amount,
           currency,
           billing_period,
-          service_packages ( name )
+          service_package:service_packages!service_package_id ( name )
         )
       )
     `)
@@ -31,7 +31,7 @@ async function getClientsData() {
     amount: number;
     currency: string;
     billing_period: string;
-    service_packages: { name: string }[] | null;
+    service_package: { name: string } | null;
   };
 
   type OrgSub = {
@@ -39,7 +39,7 @@ async function getClientsData() {
     status: string;
     cancel_at_period_end: boolean;
     current_period_end: string | null;
-    service_prices: SubPrice[] | null;
+    price: SubPrice | null;
   };
 
   const clients = (orgs ?? []).map((org) => {
@@ -47,11 +47,10 @@ async function getClientsData() {
     const activeSub = subs.find(
       (s) => s.status === "active" || s.status === "past_due"
     );
-    // service_prices and service_packages come back as arrays from the join
-    const price = Array.isArray(activeSub?.service_prices) ? activeSub.service_prices[0] : null;
+    const price = activeSub?.price ?? null;
     const mrr = price ? price.amount / 100 : null;
     const billingPeriod = price?.billing_period ?? null;
-    const packageName = Array.isArray(price?.service_packages) ? price.service_packages[0]?.name ?? null : null;
+    const packageName = price?.service_package?.name ?? null;
     const status = activeSub?.status ?? "no_subscription";
 
     return {
