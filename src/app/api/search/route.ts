@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim();
   if (!q || q.length < 2) {
@@ -10,18 +12,21 @@ export async function GET(req: NextRequest) {
   const supabase = await createClient();
   const {
     data: { user: authUser },
+    error: authError,
   } = await supabase.auth.getUser();
   if (!authUser) {
+    console.error("Search: no auth user", authError);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: dbUser } = await supabase
+  const { data: dbUser, error: dbError } = await supabase
     .from("users")
     .select("role, organisation_id")
     .eq("id", authUser.id)
     .single();
 
   if (!dbUser) {
+    console.error("Search: user not found in db", dbError);
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
