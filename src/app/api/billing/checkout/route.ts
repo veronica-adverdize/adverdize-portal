@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createBillingCheckout } from "@/lib/airwallex";
+import { createBillingCheckout, createAirwallexCustomer } from "@/lib/airwallex";
 import { rateLimit, CHECKOUT_RATE_LIMIT } from "@/lib/utils/rate-limit";
 
 export async function POST(request: NextRequest) {
@@ -61,11 +61,34 @@ export async function POST(request: NextRequest) {
   ? profile.organisation[0]
   : profile.organisation;
 
-  if (!organisation?.airwallex_customer_id) {
-    return NextResponse.json(
-      { error: "Organisation does not have an Airwallex customer" },
-      { status: 400 }
-    );
+  // Auto-create Airwallex customer if one doesn't exist yet
+  let airwallexCustomerId = organisation?.airwallex_customer_id;
+
+  if (!airwallexCustomerId) {
+    try {
+      const customerRes = await createAirwallexCustomer({
+        email: user.email!,
+        name: organisation?.name ?? "Unknown",
+        merchantCustomerId: profile.organisation_id,
+      });
+
+      airwallexCustomerId = customerRes.id;
+
+      // Save the Airwallex customer ID back to the organisation
+      await adminClient
+        .from("organisations")
+        .update({ airwallex_customer_id: airwallexCustomerId })
+        .eq("id", profile.organisation_id);
+
+      console.log("[checkout] Auto-created Airwallex customer:", airwallexCustomerId);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      console.error("[checkout] Failed to create Airwallex customer:", msg);
+      return NextResponse.json(
+        { error: "Could not create billing account. Please try again." },
+        { status: 500 }
+      );
+    }
   }
 
   // Get the selected price (including billing_period for subscription end date)
@@ -95,7 +118,7 @@ export async function POST(request: NextRequest) {
   try {
     checkout = await createBillingCheckout({
       priceId: price.airwallex_price_id,
-      billingCustomerId: organisation.airwallex_customer_id,
+      billingCustomerId: airwallexCustomerId,
       organisationId: profile.organisation_id,
       serviceId: price.service_id,
       priceIdInternal: price.id,
