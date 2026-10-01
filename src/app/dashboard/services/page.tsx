@@ -279,11 +279,11 @@ export default function ServicesPage() {
               onClick={() => { setActiveCategory(cat.key); setSelectedPeriod("monthly"); }}
               className="card p-6 text-left hover:border-brand-pink/30 hover:shadow-md transition-all group"
             >
-              <div className="flex items-start justify-between mb-3">
-                {activeCount > 0 && (
+              {activeCount > 0 && (
+                <div className="flex items-start justify-between mb-3">
                   <span className="badge-active">{activeCount} active</span>
-                )}
-              </div>
+                </div>
+              )}
               <h3 className="text-base font-semibold text-gray-900 group-hover:text-brand-pink transition-colors">
                 {cat.label}
               </h3>
