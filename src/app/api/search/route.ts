@@ -9,12 +9,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results: [] });
   }
 
+  try {
+
   let supabase;
   try {
     supabase = await createClient();
   } catch (e) {
     console.error("Search: failed to create supabase client", e);
-    return NextResponse.json({ results: [], debug: "client_error" });
+    return NextResponse.json({ results: getPageResults(q, false) });
   }
 
   const {
@@ -206,7 +208,12 @@ export async function GET(req: NextRequest) {
 
   results.push(...getPageResults(q, isAdmin));
 
+  console.log(`Search: q="${q}" isAdmin=${isAdmin} results=${results.length}`);
   return NextResponse.json({ results: results.slice(0, 15) });
+  } catch (e) {
+    console.error("Search: unexpected error", e);
+    return NextResponse.json({ results: getPageResults(q!, false) });
+  }
 }
 
 function getPageResults(q: string, isAdmin: boolean) {
