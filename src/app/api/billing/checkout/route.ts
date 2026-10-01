@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Get the selected price
+  // Get the selected price (including billing_period for subscription end date)
   const { data: price, error: priceError } = await adminClient
     .from("service_prices")
-    .select("id, airwallex_price_id, service_id")
+    .select("id, airwallex_price_id, service_id, billing_period")
     .eq("id", price_id)
     .eq("is_active", true)
     .single();
@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
       organisationId: profile.organisation_id,
       serviceId: price.service_id,
       priceIdInternal: price.id,
+      billingPeriod: price.billing_period,
       successUrl: `${appUrl}/dashboard/billing?success=1`,
       backUrl: `${appUrl}/dashboard/services`,
     });

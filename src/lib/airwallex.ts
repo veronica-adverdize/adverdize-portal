@@ -89,6 +89,14 @@ export async function createAirwallexCustomer(params: {
   });
 }
 
+// Map billing_period to number of monthly billing cycles
+const BILLING_CYCLES: Record<string, number | null> = {
+  monthly: null,       // no end date, runs until cancelled
+  quarterly: 3,
+  semi_annual: 6,
+  annual: 12,
+};
+
 export async function createBillingCheckout(params: {
   priceId: string;
   priceIdInternal: string;
@@ -97,6 +105,7 @@ export async function createBillingCheckout(params: {
   successUrl: string;
   backUrl: string;
   billingCustomerId?: string;
+  billingPeriod?: string;
 }) {
   const requestId = crypto.randomUUID();
 
@@ -106,6 +115,15 @@ export async function createBillingCheckout(params: {
     price_id: params.priceIdInternal,
   };
 
+  const totalCycles = params.billingPeriod
+    ? BILLING_CYCLES[params.billingPeriod] ?? null
+    : null;
+
+  const subscriptionData: Record<string, unknown> = { metadata };
+  if (totalCycles) {
+    subscriptionData.total_billing_cycles = totalCycles;
+  }
+
   const body: Record<string, unknown> = {
     request_id: requestId,
     mode: "SUBSCRIPTION",
@@ -113,9 +131,7 @@ export async function createBillingCheckout(params: {
     back_url: params.backUrl,
     line_items: [{ price_id: params.priceId, quantity: 1 }],
     metadata,
-    subscription_data: {
-      metadata,
-    },
+    subscription_data: subscriptionData,
   };
   if (params.billingCustomerId) {
     body.billing_customer_id = params.billingCustomerId;
