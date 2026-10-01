@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +33,36 @@ async function checkAirwallexConnection(): Promise<boolean> {
 }
 
 export default async function IntegrationsPage() {
-  const airwallexConnected = await checkAirwallexConnection();
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
 
-  const integrations = [
+  const adminClient = createAdminClient();
+  const { data: profile } = await adminClient
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isAdmin = profile?.role === "super_admin" || profile?.role === "staff";
+
+  // Check if user signed in with Google
+  const googleConnected = user.app_metadata?.provider === "google"
+    || user.app_metadata?.providers?.includes("google");
+
+  const airwallexConnected = isAdmin ? await checkAirwallexConnection() : false;
+
+  type Integration = {
+    name: string;
+    description: string;
+    logo: string;
+    connected: boolean;
+    note: string;
+    docsUrl: string | null;
+    adminOnly?: boolean;
+  };
+
+  const allIntegrations: Integration[] = [
     {
       name: "Xero",
       description: "Sync invoices and contacts automatically with your Xero account.",
@@ -40,6 +70,7 @@ export default async function IntegrationsPage() {
       connected: false,
       note: "Requires Xero OAuth credentials to activate.",
       docsUrl: "https://developer.xero.com",
+      adminOnly: true,
     },
     {
       name: "Airwallex",
@@ -50,16 +81,23 @@ export default async function IntegrationsPage() {
         ? "Webhooks active. Subscriptions and invoices sync automatically."
         : "Credentials pending — contact your Adverdize account manager.",
       docsUrl: null,
+      adminOnly: true,
     },
     {
       name: "Google",
       description: "Sign in with Google SSO for your team members.",
       logo: "/logos/google.png",
-      connected: false,
-      note: "Google OAuth credentials pending from client.",
+      connected: googleConnected,
+      note: googleConnected
+        ? "Your account is linked with Google SSO."
+        : "Google OAuth credentials pending from client.",
       docsUrl: null,
     },
   ];
+
+  const integrations = allIntegrations.filter(
+    (i) => !i.adminOnly || isAdmin
+  );
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
