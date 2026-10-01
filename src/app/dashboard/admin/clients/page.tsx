@@ -42,31 +42,52 @@ async function getClientsData() {
     price: SubPrice | null;
   };
 
+  // Convert amount to monthly equivalent based on billing period
+  function toMonthly(amount: number, period: string): number {
+    switch (period) {
+      case "quarterly": return amount / 3;
+      case "semi_annual": return amount / 6;
+      case "annual": return amount / 12;
+      default: return amount; // monthly
+    }
+  }
+
   const clients = (orgs ?? []).map((org) => {
     const subs = (org.subscriptions ?? []) as unknown as OrgSub[];
-    const activeSub = subs.find(
+    const activeSubs = subs.filter(
       (s) => s.status === "active" || s.status === "past_due"
     );
-    const price = activeSub?.price ?? null;
-    const mrr = price ? price.amount / 100 : null;
-    const billingPeriod = price?.billing_period ?? null;
-    const packageName = price?.service_package?.name ?? null;
-    const status = activeSub?.status ?? "no_subscription";
+
+    // Calculate total MRR across all active subs for this org
+    const mrr = activeSubs.reduce((sum, s) => {
+      if (!s.price) return sum;
+      const monthly = toMonthly(s.price.amount / 100, s.price.billing_period);
+      return sum + monthly;
+    }, 0);
+
+    // Show all service names
+    const packageNames = activeSubs
+      .map((s) => s.price?.service_package?.name)
+      .filter(Boolean) as string[];
+
+    const primarySub = activeSubs[0] ?? null;
+    const status = primarySub?.status ?? "no_subscription";
 
     return {
       id: org.id,
       name: org.name,
       airwallexCustomerId: org.airwallex_customer_id,
-      subscriptionId: activeSub?.id ?? null,
-      packageName,
-      billingPeriod,
-      mrr,
+      subscriptionId: primarySub?.id ?? null,
+      packageNames,
+      activeSubCount: activeSubs.length,
+      mrr: mrr > 0 ? mrr : null,
       status,
-      cancelAtPeriodEnd: activeSub?.cancel_at_period_end ?? false,
+      cancelAtPeriodEnd: primarySub?.cancel_at_period_end ?? false,
     };
   });
 
-  const activeCount = clients.filter((c) => c.status === "active").length;
+  // Count ALL active subscriptions across all orgs, not just orgs with active status
+  const activeCount = clients.reduce((sum, c) => sum + c.activeSubCount, 0);
   const totalMrr = clients.reduce((sum, c) => sum + (c.mrr ?? 0), 0);
 
   return { clients, activeCount, totalMrr };
@@ -186,63 +207,106 @@ export default async function AdminClientsPage() {
           </div>
         ) : (
           <>
-            {/* Column headers */}
-            <div className="grid items-center gap-4 px-1 mb-2" style={{ gridTemplateColumns: "2fr 2fr 1fr 90px 56px" }}>
+            {/* Desktop column headers */}
+            <div className="hidden sm:grid items-center gap-4 px-1 mb-2" style={{ gridTemplateColumns: "2fr 2fr 1fr 90px 56px" }}>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Client</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 hidden sm:block">Service</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Service</span>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">MRR</span>
               <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</span>
               <span />
             </div>
 
+            {/* Mobile header */}
+            <div className="sm:hidden grid grid-cols-3 gap-2 px-1 mb-2">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Client</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">MRR</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Status</span>
+            </div>
+
             <div className="divide-y divide-gray-50">
               {clients.map((client) => (
-                <div
-                  key={client.id}
-                  className="grid items-center gap-4 py-3.5 px-1 first:pt-0 last:pb-0"
-                  style={{ gridTemplateColumns: "2fr 2fr 1fr 90px 56px" }}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-                      style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
-                    >
-                      {client.name[0]}
+                <div key={client.id}>
+                  {/* Desktop row */}
+                  <div
+                    className="hidden sm:grid items-center gap-4 py-3.5 px-1"
+                    style={{ gridTemplateColumns: "2fr 2fr 1fr 90px 56px" }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
+                        style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
+                      >
+                        {client.name[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                        {client.airwallexCustomerId ? (
+                          <p className="text-xs text-gray-400 truncate font-mono">{client.airwallexCustomerId}</p>
+                        ) : (
+                          <p className="text-xs text-gray-300 truncate italic">No Airwallex ID</p>
+                        )}
+                      </div>
                     </div>
+
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
-                      {client.airwallexCustomerId ? (
-                        <p className="text-xs text-gray-400 truncate font-mono">{client.airwallexCustomerId}</p>
+                      {client.packageNames.length > 0 ? (
+                        client.packageNames.map((name, i) => (
+                          <p key={i} className="text-xs text-gray-700 truncate font-medium">{name}</p>
+                        ))
                       ) : (
-                        <p className="text-xs text-gray-300 truncate italic">No Airwallex ID</p>
+                        <p className="text-xs text-gray-300 italic">No service</p>
                       )}
                     </div>
+
+                    <div className="text-xs font-semibold text-gray-900">
+                      {client.mrr != null ? `SGD ${Math.round(client.mrr).toLocaleString()}/mo` : "—"}
+                    </div>
+
+                    <div>
+                      <StatusBadge status={client.status} cancelAtPeriodEnd={client.cancelAtPeriodEnd} />
+                    </div>
+
+                    <AdminSubscriptionActions
+                      subscriptionId={client.subscriptionId ?? undefined}
+                      cancelAtPeriodEnd={client.cancelAtPeriodEnd}
+                      status={client.status}
+                    />
                   </div>
 
-                  <div className="hidden sm:block min-w-0">
-                    {client.packageName ? (
-                      <>
-                        <p className="text-xs text-gray-700 truncate font-medium">{client.packageName}</p>
-                        <p className="text-xs text-gray-400">{periodLabel(client.billingPeriod)}</p>
-                      </>
-                    ) : (
-                      <p className="text-xs text-gray-300 italic">No service</p>
-                    )}
+                  {/* Mobile row — stacked layout */}
+                  <div className="sm:hidden py-4 px-1 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
+                          style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
+                        >
+                          {client.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                          {client.packageNames.length > 0 ? (
+                            <p className="text-xs text-gray-400 mt-0.5 truncate">
+                              {client.packageNames.join(", ")}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-300 italic mt-0.5">No service</p>
+                          )}
+                        </div>
+                      </div>
+                      <AdminSubscriptionActions
+                        subscriptionId={client.subscriptionId ?? undefined}
+                        cancelAtPeriodEnd={client.cancelAtPeriodEnd}
+                        status={client.status}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between pl-12">
+                      <p className="text-xs font-semibold text-gray-900">
+                        {client.mrr != null ? `SGD ${Math.round(client.mrr).toLocaleString()}/mo` : "—"}
+                      </p>
+                      <StatusBadge status={client.status} cancelAtPeriodEnd={client.cancelAtPeriodEnd} />
+                    </div>
                   </div>
-
-                  <div className="text-xs font-semibold text-gray-900">
-                    {client.mrr != null ? `SGD ${client.mrr.toLocaleString()}/mo` : "—"}
-                  </div>
-
-                  <div>
-                    <StatusBadge status={client.status} cancelAtPeriodEnd={client.cancelAtPeriodEnd} />
-                  </div>
-
-                  <AdminSubscriptionActions
-                    subscriptionId={client.subscriptionId ?? undefined}
-                    cancelAtPeriodEnd={client.cancelAtPeriodEnd}
-                    status={client.status}
-                  />
                 </div>
               ))}
             </div>
