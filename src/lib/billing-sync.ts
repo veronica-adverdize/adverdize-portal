@@ -1,4 +1,4 @@
-import { getSubscription, listInvoices } from "@/lib/airwallex";
+import { getSubscription, listInvoices, listSubscriptions } from "@/lib/airwallex";
 import { SupabaseClient } from "@supabase/supabase-js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,7 +11,56 @@ export async function syncBillingData(
   const customerId = organisation?.airwallex_customer_id;
   if (!customerId) return;
 
-  // Sync subscriptions — pull latest period dates from Airwallex
+  // Discover new subscriptions from Airwallex that aren't in our DB yet
+  try {
+    const awSubsRes = await listSubscriptions(customerId);
+    const awSubs = awSubsRes.items ?? awSubsRes.data ?? [];
+
+    for (const awSub of awSubs) {
+      if (!awSub.id) continue;
+      // Check if we already have this subscription
+      const { data: existing } = await adminClient
+        .from("subscriptions")
+        .select("id")
+        .eq("airwallex_subscription_id", awSub.id)
+        .maybeSingle();
+
+      if (!existing) {
+        // Resolve price from Airwallex price ID
+        const firstItem = awSub.items?.[0];
+        const awPriceId = typeof firstItem?.price === "object"
+          ? firstItem.price.id
+          : firstItem?.price;
+
+        const { data: price } = awPriceId
+          ? await adminClient
+              .from("service_prices")
+              .select("id, service_id")
+              .eq("airwallex_price_id", awPriceId)
+              .maybeSingle()
+          : { data: null };
+
+        const periodStart = awSub.current_period_starts_at ?? awSub.current_period_start ?? null;
+        const periodEnd = awSub.current_period_ends_at ?? awSub.current_period_end ?? null;
+        const nextBilling = awSub.next_billing_at ?? periodEnd;
+
+        await adminClient.from("subscriptions").insert({
+          airwallex_subscription_id: awSub.id,
+          organisation_id: organisationId,
+          service_id: price?.service_id ?? null,
+          price_id: price?.id ?? null,
+          status: (awSub.status ?? "ACTIVE").toLowerCase(),
+          current_period_start: periodStart,
+          current_period_end: nextBilling,
+          cancel_at_period_end: awSub.cancel_at_period_end ?? false,
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Discover new subscriptions failed:", err);
+  }
+
+  // Now refresh all existing subscriptions with latest data
   const { data: subs } = await adminClient
     .from("subscriptions")
     .select("id, airwallex_subscription_id")

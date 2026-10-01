@@ -178,3 +178,9 @@ export async function listInvoices(customerId: string) {
     `/api/v1/billing/invoices?billing_customer_id=${customerId}`
   );
 }
+
+export async function listSubscriptions(customerId: string) {
+  return airwallexFetch(
+    `/api/v1/billing/subscriptions?billing_customer_id=${customerId}`
+  );
+}
