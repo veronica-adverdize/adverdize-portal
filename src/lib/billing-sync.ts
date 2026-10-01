@@ -24,9 +24,9 @@ export async function syncBillingData(
       await adminClient
         .from("subscriptions")
         .update({
-          status: awSub.status?.toLowerCase() ?? "active",
-          current_period_start: awSub.current_period_start ?? null,
-          current_period_end: awSub.current_period_end ?? null,
+          status: (awSub.status ?? "ACTIVE").toLowerCase(),
+          current_period_start: awSub.current_period_start_at ?? awSub.current_period_start ?? null,
+          current_period_end: awSub.current_period_end_at ?? awSub.current_period_end ?? null,
           cancel_at_period_end: awSub.cancel_at_period_end ?? false,
         })
         .eq("id", sub.id);
@@ -44,19 +44,17 @@ export async function syncBillingData(
       const matchingSub = subs?.find(
         (s) => s.airwallex_subscription_id === inv.subscription_id
       );
+      const isPaid = inv.status?.toUpperCase() === "PAID";
 
       await adminClient.from("invoices").upsert(
         {
           airwallex_invoice_id: inv.id,
           organisation_id: organisationId,
           subscription_id: matchingSub?.id ?? null,
-          amount: inv.amount_due ?? inv.total ?? 0,
-          currency: inv.currency ?? "SGD",
-          status: inv.payment_status?.toLowerCase() === "paid" ? "paid" : "unpaid",
-          paid_at:
-            inv.payment_status?.toLowerCase() === "paid"
-              ? (inv.paid_at ?? inv.finalized_at ?? new Date().toISOString())
-              : null,
+          amount: inv.total_amount ?? inv.amount_due ?? 0,
+          currency: inv.currency ?? "USD",
+          status: isPaid ? "paid" : "unpaid",
+          paid_at: isPaid ? (inv.paid_at ?? inv.created_at ?? new Date().toISOString()) : null,
           invoice_url: inv.hosted_invoice_url ?? inv.invoice_url ?? null,
         },
         { onConflict: "airwallex_invoice_id" }
