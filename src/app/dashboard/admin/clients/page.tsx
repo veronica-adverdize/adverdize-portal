@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Users, TrendingUp, DollarSign, Package } from "lucide-react";
 import AdminSubscriptionActions from "@/components/admin/AdminSubscriptionActions";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -140,8 +141,19 @@ function periodLabel(period: string | null) {
   return map[period] ?? period;
 }
 
-export default async function AdminClientsPage() {
-  const { clients, activeCount, totalMrr } = await getClientsData();
+export default async function AdminClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string }>;
+}) {
+  const { search } = await searchParams;
+  const { clients: allClients, activeCount, totalMrr } = await getClientsData();
+
+  const clients = search
+    ? allClients.filter((c) =>
+        c.name.toLowerCase().includes(search.toLowerCase())
+      )
+    : allClients;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -231,7 +243,7 @@ export default async function AdminClientsPage() {
                     className="hidden sm:grid items-center gap-4 py-3.5 px-1"
                     style={{ gridTemplateColumns: "2fr 2fr 1fr 90px 56px" }}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <Link href={`/dashboard/admin/clients/${client.id}`} className="flex items-center gap-3 min-w-0 group">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
                         style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
@@ -239,14 +251,14 @@ export default async function AdminClientsPage() {
                         {client.name[0]}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[#E05C83] transition-colors">{client.name}</p>
                         {client.airwallexCustomerId ? (
                           <p className="text-xs text-gray-400 truncate font-mono">{client.airwallexCustomerId}</p>
                         ) : (
                           <p className="text-xs text-gray-300 truncate italic">No Airwallex ID</p>
                         )}
                       </div>
-                    </div>
+                    </Link>
 
                     <div className="min-w-0">
                       {client.packageNames.length > 0 ? (
@@ -276,7 +288,7 @@ export default async function AdminClientsPage() {
                   {/* Mobile row — stacked layout */}
                   <div className="sm:hidden py-4 px-1 space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
+                      <Link href={`/dashboard/admin/clients/${client.id}`} className="flex items-center gap-3 min-w-0 group">
                         <div
                           className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
                           style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
@@ -284,7 +296,7 @@ export default async function AdminClientsPage() {
                           {client.name[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{client.name}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate group-hover:text-[#E05C83] transition-colors">{client.name}</p>
                           {client.packageNames.length > 0 ? (
                             <p className="text-xs text-gray-400 mt-0.5 truncate">
                               {client.packageNames.join(", ")}
@@ -293,7 +305,7 @@ export default async function AdminClientsPage() {
                             <p className="text-xs text-gray-300 italic mt-0.5">No service</p>
                           )}
                         </div>
-                      </div>
+                      </Link>
                       <AdminSubscriptionActions
                         subscriptionId={client.subscriptionId ?? undefined}
                         cancelAtPeriodEnd={client.cancelAtPeriodEnd}
@@ -314,7 +326,7 @@ export default async function AdminClientsPage() {
         )}
       </div>
 
-      {/* Upcoming features */}
+      {/* Admin Controls Status */}
       <div className="card p-6">
         <div className="flex items-center gap-3 mb-5">
           <div
@@ -324,23 +336,23 @@ export default async function AdminClientsPage() {
             <TrendingUp size={15} style={{ color: "#E05C83" }} />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Admin Controls — Coming Soon</h2>
-            <p className="text-xs text-gray-400 mt-0.5">More client management features on the way</p>
+            <h2 className="text-sm font-semibold text-gray-900">Admin Controls</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Click a client to access these features</p>
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            "View client details",
-            "Pause subscriptions",
-            "Assign services",
-            "Apply promo codes",
-            "View client invoices",
-            "Override billing date",
-            "Send manual invoice",
-            "Xero invoice sync",
-          ].map((feat) => (
-            <div key={feat} className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2.5">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: "#E05C83" }} />
+            { feat: "View client details", live: true },
+            { feat: "Pause subscriptions", live: true },
+            { feat: "Apply promo codes", live: true },
+            { feat: "View client invoices", live: true },
+            { feat: "Assign services", live: false },
+            { feat: "Override billing date", live: false },
+            { feat: "Send manual invoice", live: false },
+            { feat: "Xero invoice sync", live: false },
+          ].map(({ feat, live }) => (
+            <div key={feat} className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 ${live ? "text-gray-700 bg-green-50" : "text-gray-400 bg-gray-50"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0`} style={{ backgroundColor: live ? "#16a34a" : "#d1d5db" }} />
               {feat}
             </div>
           ))}

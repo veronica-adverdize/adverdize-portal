@@ -19,6 +19,7 @@ export default function TopBar({ user }: TopBarProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -42,6 +43,13 @@ export default function TopBar({ user }: TopBarProps) {
         <input
           type="text"
           placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && searchQuery.trim() && user?.role === "super_admin") {
+              router.push(`/dashboard/admin/clients?search=${encodeURIComponent(searchQuery.trim())}`);
+            }
+          }}
           className="bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none w-full"
         />
       </div>

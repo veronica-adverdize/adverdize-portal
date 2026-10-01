@@ -12,7 +12,7 @@ async function verifyAdmin() {
     .select("role")
     .eq("id", user.id)
     .single();
-  return profile?.role === "admin" ? user : null;
+  return profile?.role === "super_admin" ? user : null;
 }
 
 // POST /api/admin/subscriptions — cancel or pause a client subscription
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
   const { subscription_id, action } = await request.json() as {
     subscription_id: string;
-    action: "cancel" | "cancel_now";
+    action: "cancel" | "cancel_now" | "pause";
   };
 
   if (!subscription_id || !action) {
@@ -39,6 +39,15 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
+
+  if (action === "pause") {
+    // Pause locally (Airwallex doesn't have a direct pause API)
+    await adminClient
+      .from("subscriptions")
+      .update({ status: "paused" })
+      .eq("id", subscription_id);
+    return NextResponse.json({ success: true });
+  }
 
   if (action === "cancel") {
     // Cancel at period end
