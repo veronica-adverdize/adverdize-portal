@@ -196,43 +196,46 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Quick actions — coming soon */}
+      {/* Quick Actions */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
-            >
-              <Zap size={15} style={{ color: "#F4845F" }} />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Quick Actions</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Manage your services in one click</p>
-            </div>
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
+          >
+            <Zap size={15} style={{ color: "#F4845F" }} />
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900">Quick Actions</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Manage your services in one click</p>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            { label: "Upgrade Plan", desc: "Move to a higher tier mid-cycle" },
-            { label: "Add Service", desc: "Subscribe to an additional service" },
-            { label: "Apply Promo Code", desc: "Enter a discount or referral code" },
-          ].map((action) => (
-            <div
-              key={action.label}
-              className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50"
-            >
-              <p className="text-xs font-semibold text-gray-700">{action.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{action.desc}</p>
-            </div>
-          ))}
+          <Link
+            href="/dashboard/billing"
+            className="rounded-lg border border-gray-200 p-4 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">Upgrade Plan</p>
+            <p className="text-xs text-gray-400 mt-0.5">Move to a higher tier mid-cycle</p>
+          </Link>
+          <Link
+            href="/dashboard/services"
+            className="rounded-lg border border-gray-200 p-4 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">Add Service</p>
+            <p className="text-xs text-gray-400 mt-0.5">Subscribe to an additional service</p>
+          </Link>
+          <Link
+            href="/dashboard/billing"
+            className="rounded-lg border border-gray-200 p-4 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <p className="text-xs font-semibold text-gray-700">Apply Promo Code</p>
+            <p className="text-xs text-gray-400 mt-0.5">Enter a discount or referral code</p>
+          </Link>
         </div>
       </div>
 
-      {/* Billing placeholder */}
+      {/* Billing & Invoices */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
@@ -255,13 +258,12 @@ export default async function DashboardPage() {
             View billing <ArrowRight size={12} />
           </Link>
         </div>
-        <div className="rounded-lg bg-gray-50 border border-dashed border-gray-200 p-6 text-center">
-          <CreditCard size={28} className="text-gray-300 mx-auto mb-2" />
-          <p className="text-sm text-gray-400 font-medium">Billing details coming soon</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Payment history and invoice management will be available once Airwallex is connected.
-          </p>
-        </div>
+        <p className="text-xs text-gray-400">
+          Manage your payment methods, view invoices, apply promo codes and more from the{" "}
+          <Link href="/dashboard/billing" className="underline" style={{ color: "#E05C83" }}>
+            billing page
+          </Link>.
+        </p>
       </div>
 
     </div>

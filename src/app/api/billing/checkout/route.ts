@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createBillingCheckout } from "@/lib/airwallex";
 import { rateLimit, CHECKOUT_RATE_LIMIT } from "@/lib/utils/rate-limit";
 
@@ -20,7 +21,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "price_id is required" }, { status: 400 });
   }
 
-  const { data: price } = await supabase
+  const adminClient = createAdminClient();
+
+  const { data: price } = await adminClient
     .from("service_prices")
     .select("airwallex_price_id, service_id")
     .eq("id", price_id)

@@ -1,8 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
-import { User, Building2, Lock, Settings2, AlertTriangle, Chrome, Bell } from "lucide-react";
+import { User, Building2, Lock, Settings2, AlertTriangle } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
+import Link from "next/link";
+import GoogleSignInSection from "@/components/settings/GoogleSignInSection";
+import NotificationPreferences from "@/components/settings/NotificationPreferences";
 
 export default async function SettingsPage() {
   noStore();
@@ -98,74 +101,11 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      {/* Google SSO — coming soon */}
-      <div className="card p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
-            >
-              <Chrome size={15} style={{ color: "#E05C83" }} />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Google Sign-In</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Link your Google account for SSO login</p>
-            </div>
-          </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
-        </div>
-        <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-dashed border-gray-200 p-4 opacity-50">
-          <div className="flex items-center gap-3">
-            <img src="/logos/google.png" alt="Google" className="w-5 h-5 object-contain" />
-            <p className="text-sm text-gray-600">Connect Google account</p>
-          </div>
-          <button disabled className="btn-outline text-xs cursor-not-allowed">
-            Connect
-          </button>
-        </div>
-        <p className="text-xs text-gray-400">
-          Once connected, you can sign in with your Google account instead of a password. Google OAuth credentials are pending setup.
-        </p>
-      </div>
+      {/* Google Sign-In */}
+      <GoogleSignInSection userEmail={email} />
 
-      {/* Notifications — coming soon */}
-      <div className="card p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
-            >
-              <Bell size={15} style={{ color: "#E05C83" }} />
-            </div>
-            <div>
-              <h2 className="text-sm font-semibold text-gray-900">Notifications</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Choose what updates you receive</p>
-            </div>
-          </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
-        </div>
-        <div className="divide-y divide-gray-50 opacity-50 pointer-events-none">
-          {[
-            { label: "Invoice paid", desc: "When your monthly invoice is auto-charged" },
-            { label: "Subscription changes", desc: "Plan upgrades, downgrades or cancellations" },
-            { label: "Campaign reports", desc: "Monthly performance summary from your Adverdize team" },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-              <div>
-                <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
-              </div>
-              <div className="w-9 h-5 rounded-full bg-gray-200 shrink-0" />
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Notifications */}
+      <NotificationPreferences userId={user.id} />
 
       {/* Password */}
       <div className="card p-6 space-y-5">
@@ -197,12 +137,12 @@ export default async function SettingsPage() {
           </div>
           <h2 className="text-sm font-semibold text-gray-900">Subscription Management</h2>
         </div>
-        <div className="rounded-lg bg-gray-50 border border-dashed border-gray-200 p-5 text-center">
-          <p className="text-sm text-gray-400 font-medium">Pause &amp; cancel options coming soon</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Subscription pause and cancellation will be available once Airwallex is connected.
-          </p>
-        </div>
+        <p className="text-xs text-gray-400">
+          Pause, upgrade, downgrade or cancel your subscription from the{" "}
+          <Link href="/dashboard/billing" className="underline" style={{ color: "#E05C83" }}>
+            billing page
+          </Link>.
+        </p>
       </div>
 
       {/* Danger zone */}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createCustomerPortalSession } from "@/lib/airwallex";
 import { rateLimit, API_RATE_LIMIT } from "@/lib/utils/rate-limit";
 
@@ -11,9 +12,9 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const adminClient = createAdminClient();
 
-  // Look up customer_id from the user's own org — never trust it from the client
-  const { data: profile } = await supabase
+  const { data: profile } = await adminClient
     .from("users")
     .select("organisation_id")
     .eq("id", user.id)
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No organisation found" }, { status: 400 });
   }
 
-  const { data: org } = await supabase
+  const { data: org } = await adminClient
     .from("organisations")
     .select("airwallex_customer_id")
     .eq("id", profile.organisation_id)

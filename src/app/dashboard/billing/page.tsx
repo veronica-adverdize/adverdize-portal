@@ -6,6 +6,9 @@ import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCirc
 import Link from "next/link";
 import CancelButton from "@/components/billing/CancelButton";
 import PortalButton from "@/components/billing/PortalButton";
+import RequestChangeButton from "@/components/billing/RequestChangeButton";
+import PromoCodeForm from "@/components/billing/PromoCodeForm";
+import PauseButton from "@/components/billing/PauseButton";
 
 export default async function BillingPage({
   searchParams,
@@ -140,7 +143,7 @@ export default async function BillingPage({
         )}
       </div>
 
-      {/* Payment method — coming soon */}
+      {/* Payment Method */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -155,85 +158,53 @@ export default async function BillingPage({
               <p className="text-xs text-gray-400 mt-0.5">Your saved card for automatic billing</p>
             </div>
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          <PortalButton
+            customerId={(profile?.organisation as { airwallex_customer_id?: string })?.airwallex_customer_id}
+          />
         </div>
-        <div className="rounded-lg bg-gray-50 border border-dashed border-gray-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-7 rounded bg-gray-200 shrink-0" />
-          <div>
-            <div className="h-3 w-28 bg-gray-200 rounded animate-pulse" />
-            <div className="h-2.5 w-16 bg-gray-100 rounded animate-pulse mt-1.5" />
-          </div>
-        </div>
-        <p className="text-xs text-gray-400 mt-3">
-          Card management will be available via Airwallex once your account is connected. Your card details are stored securely by Airwallex — we never see or store them.
+        <p className="text-xs text-gray-400">
+          Your card details are stored securely by Airwallex — we never see or store them. Click "Manage" to view or update your payment method.
         </p>
       </div>
 
-      {/* Mid-cycle changes — coming soon */}
+      {/* Mid-Cycle Changes */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
-            >
-              <ArrowDownUp size={15} style={{ color: "#F4845F" }} />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900">Mid-Cycle Changes</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Upgrade or downgrade your plan anytime</p>
-            </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "rgba(244,132,95,0.08)" }}
+          >
+            <ArrowDownUp size={15} style={{ color: "#F4845F" }} />
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Mid-Cycle Changes</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Upgrade or downgrade your plan anytime</p>
+          </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50">
-            <p className="text-xs font-semibold text-gray-700">Upgrade Plan</p>
-            <p className="text-xs text-gray-400 mt-0.5">Switch to a higher tier. Pro-rated charges apply for the remainder of your billing cycle.</p>
-          </div>
-          <div className="rounded-lg border border-dashed border-gray-200 p-4 opacity-50">
-            <p className="text-xs font-semibold text-gray-700">Downgrade Plan</p>
-            <p className="text-xs text-gray-400 mt-0.5">Switch to a lower tier. Change takes effect at the start of your next billing cycle.</p>
-          </div>
+          <RequestChangeButton type="upgrade" subscriptionId={subscriptions?.[0]?.id} />
+          <RequestChangeButton type="downgrade" subscriptionId={subscriptions?.[0]?.id} />
         </div>
       </div>
 
-      {/* Promo code — coming soon */}
+      {/* Promo Code */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
-            >
-              <Tag size={15} style={{ color: "#E05C83" }} />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900">Promo Code</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Apply a discount or referral code</p>
-            </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+            style={{ backgroundColor: "rgba(224,92,131,0.08)" }}
+          >
+            <Tag size={15} style={{ color: "#E05C83" }} />
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Promo Code</h3>
+            <p className="text-xs text-gray-400 mt-0.5">Apply a discount or referral code</p>
+          </div>
         </div>
-        <div className="flex gap-2 opacity-50">
-          <input
-            disabled
-            placeholder="Enter promo code"
-            className="input flex-1 cursor-not-allowed"
-          />
-          <button disabled className="btn-primary text-xs cursor-not-allowed opacity-80 shrink-0">
-            Apply
-          </button>
-        </div>
+        <PromoCodeForm />
       </div>
 
-      {/* Pause subscription — coming soon */}
+      {/* Pause Subscription */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -248,12 +219,10 @@ export default async function BillingPage({
               <p className="text-xs text-gray-400 mt-0.5">Temporarily pause billing without cancelling</p>
             </div>
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
+          <PauseButton subscriptionId={subscriptions?.[0]?.id} />
         </div>
         <p className="text-xs text-gray-400">
-          Pausing your subscription will stop billing for the selected period. Your account and data remain intact. Available once Airwallex is connected.
+          Pausing your subscription will stop billing for the selected period. Your account and data remain intact.
         </p>
       </div>
 
