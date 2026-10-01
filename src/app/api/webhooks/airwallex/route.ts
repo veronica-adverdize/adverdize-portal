@@ -57,28 +57,37 @@ export async function POST(request: NextRequest) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleEvent(supabase: any, event: any) {
-  // Airwallex nests the resource under data.object
+  // Old API (<=2025-04-25) nests resource under data.object
+  // New API (>=2025-06-16) puts resource directly in data
   const obj = event.data?.object ?? event.data;
 
   switch (event.name) {
+    // Subscription events (both API versions)
     case "subscription.created":
-    case "subscription.updated":
-    case "subscription.active":
+    case "subscription.updated":    // old API
+    case "subscription.modified":   // new API (>=2025-06-16)
+    case "subscription.active":     // new API
+    case "subscription.in_trial":   // new API
       await handleSubscriptionUpsert(supabase, obj);
       break;
 
     case "subscription.cancelled":
+    case "subscription.unpaid":     // new API
       await supabase
         .from("subscriptions")
-        .update({ status: "cancelled", cancel_at_period_end: false })
+        .update({ status: event.name === "subscription.unpaid" ? "unpaid" : "cancelled", cancel_at_period_end: false })
         .eq("airwallex_subscription_id", obj.id);
       break;
 
-    case "invoice.payment_succeeded":
+    // Invoice paid (old API: invoice.paid, new API: invoice.payment.paid)
+    case "invoice.paid":
+    case "invoice.payment.paid":
       await handleInvoicePaid(supabase, obj);
       break;
 
+    // Invoice failed (old API: invoice.payment_failed)
     case "invoice.payment_failed":
+    case "invoice.payment_attempt_failed":
       await supabase
         .from("invoices")
         .update({ status: "unpaid" })
@@ -141,7 +150,7 @@ async function handleInvoicePaid(supabase: any, inv: any) {
       airwallex_invoice_id: inv.id,
       organisation_id: subRow?.organisation_id ?? null,
       subscription_id: subRow?.id ?? null,
-      amount: Math.round((inv.amount_due ?? inv.amount_paid ?? 0) * 100),
+      amount: Math.round((inv.total_amount ?? inv.amount_due ?? inv.amount_paid ?? 0) * 100),
       currency: inv.currency ?? "SGD",
       status: "paid",
       paid_at: new Date().toISOString(),
