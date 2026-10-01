@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { Package, Tag, Plus, Eye, EyeOff, X, Loader2, Check, Pencil } from "lucide-react";
+import Link from "next/link";
+import { Package, Tag, Plus, Eye, EyeOff, X, Loader2, Check, Pencil, ArrowRight } from "lucide-react";
 
 type Price = {
   id: string;
@@ -708,22 +709,20 @@ export default function AdminServicesPage() {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-gray-900">Promo Codes</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Create discount codes for clients</p>
+              <p className="text-xs text-gray-400 mt-0.5">Create and manage discount codes for clients</p>
             </div>
           </div>
-          <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-400 tracking-wide">
-            COMING SOON
-          </span>
         </div>
-        <div className="text-center py-8">
-          <Tag size={24} className="mx-auto text-gray-200 mb-2" />
-          <p className="text-sm text-gray-400">No promo codes yet.</p>
-          <p className="text-xs text-gray-300 mt-1">Promo code management coming soon.</p>
-        </div>
-        <button disabled className="btn-outline text-xs gap-1.5 w-full opacity-50 cursor-not-allowed">
-          <Plus size={13} />
-          Create promo code
-        </button>
+        <p className="text-sm text-gray-500 mb-4">
+          Manage all your promo codes from the dedicated page — create new codes, edit discounts, set expiry dates, and track redemptions.
+        </p>
+        <Link
+          href="/dashboard/admin/promo-codes"
+          className="btn-primary text-xs gap-1.5 w-full justify-center"
+        >
+          Manage Promo Codes
+          <ArrowRight size={13} />
+        </Link>
       </div>
 
     </div>
