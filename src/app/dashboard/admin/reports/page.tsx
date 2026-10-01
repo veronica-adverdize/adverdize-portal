@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { BarChart3, TrendingUp, Users, DollarSign, ArrowUpRight, FileText, CheckCircle, XCircle } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -62,12 +63,13 @@ async function getReportsData() {
     : 0;
 
   const recentInvoices: InvoiceRow[] = allInvoices.slice(0, 5);
+  const totalInvoiceCount = allInvoices.length;
 
-  return { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices };
+  return { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices, totalInvoiceCount };
 }
 
 export default async function AdminReportsPage() {
-  const { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices } =
+  const { totalClients, activeSubCount, mrr, totalRevenue, churnRate, recentInvoices, totalInvoiceCount } =
     await getReportsData();
 
   const hasData = activeSubCount > 0 || totalRevenue > 0;
@@ -242,6 +244,17 @@ export default async function AdminReportsPage() {
               </div>
             ))}
           </div>
+          {totalInvoiceCount > 5 && (
+            <div className="pt-4 mt-1 border-t border-gray-50 text-center">
+              <Link
+                href="/dashboard/admin/invoices"
+                className="text-xs font-medium hover:underline"
+                style={{ color: "#E05C83" }}
+              >
+                View all {totalInvoiceCount} invoices →
+              </Link>
+            </div>
+          )}
         )}
       </div>
 
