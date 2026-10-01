@@ -79,13 +79,14 @@ export async function createAirwallexCustomer(params: {
   name: string;
   merchantCustomerId: string;
 }) {
-  return airwallexFetch("/api/v1/billing/customers/create", {
+  return airwallexFetch("/api/v1/billing/billing_customers/create", {
     method: "POST",
     body: JSON.stringify({
       request_id: crypto.randomUUID(),
       email: params.email,
-      full_name: params.name,
+      name: params.name,
       merchant_customer_id: params.merchantCustomerId,
+      default_billing_currency: "SGD",
     }),
   });
 }
