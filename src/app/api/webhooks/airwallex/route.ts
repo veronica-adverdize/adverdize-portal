@@ -106,6 +106,52 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
   const custId = sub.billing_customer_id ?? sub.customer_id;
   console.log(`[webhook] handleSubscriptionUpsert: sub.id=${sub.id}, billing_customer_id=${sub.billing_customer_id}, customer_id=${sub.customer_id}, resolved custId=${custId}`);
 
+  const metadata =
+    sub.metadata ??
+    sub.subscription_data?.metadata ??
+    {};
+
+  const metadataOrganisationId =
+    metadata.organisation_id ?? null;
+
+  const metadataServiceId =
+    metadata.service_id ?? null;
+
+  const metadataPriceId =
+    metadata.price_id ?? null;
+
+  console.log("[webhook] Subscription metadata:", {
+    organisation_id: metadataOrganisationId,
+    service_id: metadataServiceId,
+    price_id: metadataPriceId,
+  });
+
+  let organisationId = metadataOrganisationId;
+
+  // Fallback to Airwallex customer mapping
+  if (!organisationId) {
+    const custId =
+      sub.billing_customer_id ??
+      sub.customer_id;
+
+    if (custId) {
+      const { data: org, error: orgErr } = await supabase
+        .from("organisations")
+        .select("id")
+        .eq("airwallex_customer_id", custId)
+        .maybeSingle();
+
+      if (orgErr) {
+        console.error("[webhook] Organisation lookup error:", orgErr);
+      }
+
+      organisationId = org?.id ?? null;
+    }
+  }
+
+  let priceId = metadataPriceId;
+  let serviceId = metadataServiceId;
+
   const { data: org, error: orgErr } = await supabase
     .from("organisations")
     .select("id")
@@ -122,6 +168,18 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
   const airwallexPriceId =
     firstItem?.price_id ??
     (typeof firstItem?.price === "object" ? firstItem.price.id : firstItem?.price);
+
+  if (!priceId && airwallexPriceId) {
+    const { data: price } = await supabase
+      .from("service_prices")
+      .select("id, service_id")
+      .eq("airwallex_price_id", airwallexPriceId)
+      .maybeSingle();
+
+    priceId = price?.id ?? null;
+    serviceId = price?.service_id ?? serviceId;
+  }
+
   console.log(`[webhook] firstItem keys=${firstItem ? Object.keys(firstItem).join(",") : "none"}, airwallexPriceId=${airwallexPriceId}`);
 
   const { data: price, error: priceErr } = airwallexPriceId
@@ -135,19 +193,70 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
   if (priceErr) console.error(`[webhook] price lookup error:`, priceErr);
   if (!price && airwallexPriceId) console.warn(`[webhook] No price found for airwallexPriceId=${airwallexPriceId}`);
 
-  await supabase.from("subscriptions").upsert(
-    {
-      airwallex_subscription_id: sub.id,
-      organisation_id: org?.id ?? null,
-      service_id: price?.service_id ?? null,
-      price_id: price?.id ?? null,
-      status: sub.status?.toLowerCase() ?? "active",
-      current_period_start: sub.current_period_starts_at ?? sub.current_period_start ?? null,
-      current_period_end: sub.next_billing_at ?? sub.current_period_ends_at ?? sub.current_period_end ?? null,
-      cancel_at_period_end: sub.cancel_at_period_end ?? false,
-    },
-    { onConflict: "airwallex_subscription_id" }
-  );
+  const { error } = await supabase
+    .from("subscriptions")
+    .upsert(
+      {
+        airwallex_subscription_id: sub.id,
+
+        // Metadata is preferred, Airwallex customer lookup is the fallback
+        organisation_id: organisationId ?? org?.id ?? null,
+
+        // Metadata is preferred, Airwallex price lookup is the fallback
+        service_id: serviceId ?? price?.service_id ?? null,
+        price_id: priceId ?? price?.id ?? null,
+
+        status: sub.status?.toLowerCase() ?? "active",
+
+        current_period_start:
+          sub.current_period_starts_at ??
+          sub.current_period_start ??
+          null,
+
+        current_period_end:
+          sub.next_billing_at ??
+          sub.current_period_ends_at ??
+          sub.current_period_end ??
+          null,
+
+        cancel_at_period_end:
+          sub.cancel_at_period_end ??
+          false,
+      },
+      {
+        onConflict: "airwallex_subscription_id",
+      }
+    );
+
+    if (error) {
+    console.error(
+      "[webhook] Subscription upsert failed:",
+      error
+    );
+
+    throw error;
+  }
+
+  console.log("[webhook] Subscription saved:", {
+    subscription_id: sub.id,
+    organisation_id: organisationId ?? org?.id ?? null,
+    service_id: serviceId ?? price?.service_id ?? null,
+    price_id: priceId ?? price?.id ?? null,
+  });
+
+  // await supabase.from("subscriptions").upsert(
+  //   {
+  //     airwallex_subscription_id: sub.id,
+  //     organisation_id: org?.id ?? null,
+  //     service_id: price?.service_id ?? null,
+  //     price_id: price?.id ?? null,
+  //     status: sub.status?.toLowerCase() ?? "active",
+  //     current_period_start: sub.current_period_starts_at ?? sub.current_period_start ?? null,
+  //     current_period_end: sub.next_billing_at ?? sub.current_period_ends_at ?? sub.current_period_end ?? null,
+  //     cancel_at_period_end: sub.cancel_at_period_end ?? false,
+  //   },
+  //   { onConflict: "airwallex_subscription_id" }
+  // );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -91,18 +91,31 @@ export async function createAirwallexCustomer(params: {
 
 export async function createBillingCheckout(params: {
   priceId: string;
+  priceIdInternal: string;
+  serviceId: string;
+  organisationId: string;
   successUrl: string;
   backUrl: string;
   billingCustomerId?: string;
 }) {
   const requestId = crypto.randomUUID();
+
+  const metadata = {
+    organisation_id: params.organisationId,
+    service_id: params.serviceId,
+    price_id: params.priceIdInternal,
+  };
+
   const body: Record<string, unknown> = {
     request_id: requestId,
     mode: "SUBSCRIPTION",
     success_url: params.successUrl,
     back_url: params.backUrl,
     line_items: [{ price_id: params.priceId, quantity: 1 }],
-    subscription_data: {},
+    metadata,
+    subscription_data: {
+      metadata,
+    },
   };
   if (params.billingCustomerId) {
     body.billing_customer_id = params.billingCustomerId;

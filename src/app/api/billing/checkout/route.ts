@@ -21,17 +21,68 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "price_id is required" }, { status: 400 });
   }
 
+  // const adminClient = createAdminClient();
+
+  // const { data: price } = await adminClient
+  //   .from("service_prices")
+  //   .select("airwallex_price_id, service_id")
+  //   .eq("id", price_id)
+  //   .eq("is_active", true)
+  //   .single();
+
+  // if (!price?.airwallex_price_id) {
+  //   return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+  // }
   const adminClient = createAdminClient();
 
-  const { data: price } = await adminClient
+  // Get the user's organisation + Airwallex customer
+  const { data: profile, error: profileError } = await adminClient
+    .from("users")
+    .select(`
+      organisation_id,
+      organisation:organisations (
+        id,
+        airwallex_customer_id
+      )
+    `)
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile?.organisation_id) {
+    console.error("[checkout] Organisation lookup failed:", profileError);
+
+    return NextResponse.json(
+      { error: "No organisation found for user" },
+      { status: 400 }
+    );
+  }
+
+  const organisation = Array.isArray(profile.organisation)
+  ? profile.organisation[0]
+  : profile.organisation;
+
+  if (!organisation?.airwallex_customer_id) {
+    return NextResponse.json(
+      { error: "Organisation does not have an Airwallex customer" },
+      { status: 400 }
+    );
+  }
+
+  // Get the selected price
+  const { data: price, error: priceError } = await adminClient
     .from("service_prices")
-    .select("airwallex_price_id, service_id")
+    .select("id, airwallex_price_id, service_id")
     .eq("id", price_id)
     .eq("is_active", true)
     .single();
 
-  if (!price?.airwallex_price_id) {
-    return NextResponse.json({ error: "Invalid price" }, { status: 400 });
+  if (priceError || !price?.airwallex_price_id) {
+    console.error("[checkout] Price lookup failed:", priceError);
+
+    return NextResponse.json(
+      { error: "Invalid price" },
+      { status: 400 }
+    );
   }
 
   // Derive base URL — try env first, then request origin, then nextUrl
@@ -44,6 +95,10 @@ export async function POST(request: NextRequest) {
   try {
     checkout = await createBillingCheckout({
       priceId: price.airwallex_price_id,
+      billingCustomerId: organisation.airwallex_customer_id,
+      organisationId: profile.organisation_id,
+      serviceId: price.service_id,
+      priceIdInternal: price.id,
       successUrl: `${appUrl}/dashboard/billing?success=1`,
       backUrl: `${appUrl}/dashboard/services`,
     });
