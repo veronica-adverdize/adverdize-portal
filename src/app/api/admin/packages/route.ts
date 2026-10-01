@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createProduct, createPrice } from "@/lib/airwallex";
+import { createProduct, createPrice, updateProduct, deactivatePrice } from "@/lib/airwallex";
 
 async function requireSuperAdmin() {
   const supabase = await createClient();
@@ -142,7 +142,28 @@ export async function PUT(request: NextRequest) {
 
   const adminClient = createAdminClient();
 
-  // Update package fields
+  // Get the package so we have its Airwallex product ID
+  const { data: pkg } = await adminClient
+    .from("service_packages")
+    .select("airwallex_product_id")
+    .eq("id", id)
+    .single();
+
+  // Sync product changes to Airwallex
+  if (pkg?.airwallex_product_id && (name !== undefined || description !== undefined || is_active !== undefined)) {
+    try {
+      const awUpdate: Record<string, unknown> = {};
+      if (name !== undefined) awUpdate.name = name;
+      if (description !== undefined) awUpdate.description = description ?? "";
+      if (is_active !== undefined) awUpdate.active = is_active;
+      await updateProduct(pkg.airwallex_product_id, awUpdate as Parameters<typeof updateProduct>[1]);
+    } catch (err) {
+      console.error("Airwallex product update failed:", err);
+      // Continue — still save locally so admin isn't blocked
+    }
+  }
+
+  // Update package fields in Supabase
   const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
   if (description !== undefined) updates.description = description;
@@ -162,49 +183,103 @@ export async function PUT(request: NextRequest) {
 
   // Update prices if provided
   if (prices && prices.length > 0) {
-    // Get existing prices for this package
     const { data: existingPrices } = await adminClient
       .from("service_prices")
-      .select("id, billing_period")
+      .select("id, billing_period, amount, airwallex_price_id")
       .eq("service_id", id);
 
     const existingMap = new Map(
-      (existingPrices ?? []).map((p) => [p.billing_period, p.id])
+      (existingPrices ?? []).map((p) => [p.billing_period, p])
     );
 
     for (const p of prices) {
-      const existingId = existingMap.get(p.billing_period);
+      const existing = existingMap.get(p.billing_period);
 
-      if (existingId) {
-        // Update existing price row amount
+      if (existing && existing.amount === p.amount) {
+        // Same amount — just make sure it's active
         await adminClient
           .from("service_prices")
-          .update({ amount: p.amount, is_active: true })
-          .eq("id", existingId);
+          .update({ is_active: true })
+          .eq("id", existing.id);
+      } else if (existing && existing.amount !== p.amount) {
+        // Amount changed — deactivate old price in Airwallex, create new one
+        if (existing.airwallex_price_id && !existing.airwallex_price_id.startsWith("placeholder")) {
+          try {
+            await deactivatePrice(existing.airwallex_price_id);
+          } catch (err) {
+            console.error("Airwallex deactivate price failed:", err);
+          }
+        }
+
+        let newAirwallexPriceId = `placeholder_${id}_${p.billing_period}`;
+        if (pkg?.airwallex_product_id) {
+          try {
+            const newPrice = await createPrice({
+              productId: pkg.airwallex_product_id,
+              amount: p.amount,
+              currency: p.currency,
+              billingPeriod: p.billing_period,
+            });
+            newAirwallexPriceId = newPrice.id;
+          } catch (err) {
+            console.error("Airwallex create price failed:", err);
+          }
+        }
+
+        // Update the existing row with new amount and new Airwallex ID
+        await adminClient
+          .from("service_prices")
+          .update({ amount: p.amount, airwallex_price_id: newAirwallexPriceId, is_active: true })
+          .eq("id", existing.id);
       } else {
-        // Insert new price row (placeholder Airwallex ID for now)
+        // Brand new billing period — create in Airwallex
+        let newAirwallexPriceId = `placeholder_${id}_${p.billing_period}`;
+        if (pkg?.airwallex_product_id) {
+          try {
+            const newPrice = await createPrice({
+              productId: pkg.airwallex_product_id,
+              amount: p.amount,
+              currency: p.currency,
+              billingPeriod: p.billing_period,
+            });
+            newAirwallexPriceId = newPrice.id;
+          } catch (err) {
+            console.error("Airwallex create price failed:", err);
+          }
+        }
+
         await adminClient.from("service_prices").insert({
           service_id: id,
           billing_period: p.billing_period,
           amount: p.amount,
           currency: p.currency,
-          airwallex_price_id: `placeholder_${id}_${p.billing_period}`,
+          airwallex_price_id: newAirwallexPriceId,
           is_active: true,
         });
       }
     }
 
-    // Deactivate prices for billing periods not included
+    // Deactivate removed billing periods in both Airwallex and Supabase
     const activePeriods = prices.map((p) => p.billing_period);
-    const toDeactivate = (existingPrices ?? [])
-      .filter((p) => !activePeriods.includes(p.billing_period))
-      .map((p) => p.id);
+    const toDeactivate = (existingPrices ?? []).filter(
+      (p) => !activePeriods.includes(p.billing_period)
+    );
+
+    for (const old of toDeactivate) {
+      if (old.airwallex_price_id && !old.airwallex_price_id.startsWith("placeholder")) {
+        try {
+          await deactivatePrice(old.airwallex_price_id);
+        } catch (err) {
+          console.error("Airwallex deactivate price failed:", err);
+        }
+      }
+    }
 
     if (toDeactivate.length > 0) {
       await adminClient
         .from("service_prices")
         .update({ is_active: false })
-        .in("id", toDeactivate);
+        .in("id", toDeactivate.map((p) => p.id));
     }
   }
 

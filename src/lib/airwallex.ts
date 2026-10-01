@@ -167,6 +167,29 @@ export async function createPrice(params: {
   });
 }
 
+export async function updateProduct(
+  productId: string,
+  params: { name?: string; description?: string; active?: boolean }
+) {
+  return airwallexFetch(`/api/v1/billing/products/${productId}/update`, {
+    method: "POST",
+    body: JSON.stringify({
+      request_id: crypto.randomUUID(),
+      ...params,
+    }),
+  });
+}
+
+export async function deactivatePrice(priceId: string) {
+  return airwallexFetch(`/api/v1/billing/prices/${priceId}/update`, {
+    method: "POST",
+    body: JSON.stringify({
+      request_id: crypto.randomUUID(),
+      active: false,
+    }),
+  });
+}
+
 export async function createCustomerPortalSession(params: {
   customerId: string;
   returnUrl: string;
