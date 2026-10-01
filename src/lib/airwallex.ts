@@ -89,8 +89,8 @@ export async function createAirwallexCustomer(params: {
   });
 }
 
-// Map billing_period to number of monthly billing cycles
-const BILLING_CYCLES: Record<string, number | null> = {
+// Map billing_period to subscription duration in months
+const BILLING_DURATION_MONTHS: Record<string, number | null> = {
   monthly: null,       // no end date, runs until cancelled
   quarterly: 3,
   semi_annual: 6,
@@ -115,13 +115,13 @@ export async function createBillingCheckout(params: {
     price_id: params.priceIdInternal,
   };
 
-  const totalCycles = params.billingPeriod
-    ? BILLING_CYCLES[params.billingPeriod] ?? null
+  const durationMonths = params.billingPeriod
+    ? BILLING_DURATION_MONTHS[params.billingPeriod] ?? null
     : null;
 
   const subscriptionData: Record<string, unknown> = { metadata };
-  if (totalCycles) {
-    subscriptionData.total_billing_cycles = totalCycles;
+  if (durationMonths) {
+    subscriptionData.duration = { period: durationMonths, period_unit: "MONTH" };
   }
 
   const body: Record<string, unknown> = {
