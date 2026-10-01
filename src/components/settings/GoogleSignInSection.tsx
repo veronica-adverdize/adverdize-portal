@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Chrome } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export default function GoogleSignInSection({ userEmail }: { userEmail: string }) {
+export default function GoogleSignInSection({
+  userEmail,
+  connected,
+}: {
+  userEmail: string;
+  connected: boolean;
+}) {
   const [loading, setLoading] = useState(false);
 
   async function handleConnect() {
@@ -18,7 +24,6 @@ export default function GoogleSignInSection({ userEmail }: { userEmail: string }
         },
       });
       if (error) {
-        // If linking isn't supported, fall back to sign in with Google
         await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
@@ -44,7 +49,9 @@ export default function GoogleSignInSection({ userEmail }: { userEmail: string }
         </div>
         <div>
           <h2 className="text-sm font-semibold text-gray-900">Google Sign-In</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Link your Google account for SSO login</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            {connected ? "Your Google account is linked" : "Link your Google account for SSO login"}
+          </p>
         </div>
       </div>
       <div className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-200 p-4">
@@ -57,16 +64,24 @@ export default function GoogleSignInSection({ userEmail }: { userEmail: string }
           </svg>
           <p className="text-sm text-gray-600">{userEmail}</p>
         </div>
-        <button
-          onClick={handleConnect}
-          disabled={loading}
-          className="btn-outline text-xs disabled:opacity-50"
-        >
-          {loading ? "Connecting..." : "Connect"}
-        </button>
+        {connected ? (
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
+            Connected
+          </span>
+        ) : (
+          <button
+            onClick={handleConnect}
+            disabled={loading}
+            className="btn-outline text-xs disabled:opacity-50"
+          >
+            {loading ? "Connecting..." : "Connect"}
+          </button>
+        )}
       </div>
       <p className="text-xs text-gray-400">
-        Once connected, you can sign in with your Google account instead of a password.
+        {connected
+          ? "You can sign in with your Google account instead of a password."
+          : "Once connected, you can sign in with your Google account instead of a password."}
       </p>
     </div>
   );

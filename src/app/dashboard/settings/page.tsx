@@ -102,7 +102,14 @@ export default async function SettingsPage() {
       </div>
 
       {/* Google Sign-In */}
-      <GoogleSignInSection userEmail={email} />
+      <GoogleSignInSection
+        userEmail={email}
+        connected={
+          user.app_metadata?.provider === "google"
+          || user.app_metadata?.providers?.includes("google")
+          || false
+        }
+      />
 
       {/* Notifications */}
       <NotificationPreferences userId={user.id} />
