@@ -69,14 +69,6 @@ async function airwallexFetch(path, options = {}) {
   return JSON.parse(text);
 }
 
-// Billing period to metadata value
-const periodToLength = {
-  monthly: "1_mo",
-  quarterly: "3_mos",
-  semi_annual: "6_mos",
-  annual: "12_mos",
-};
-
 // All prices from Supabase with their Airwallex IDs
 const prices = [
   { id: "pri_sgpvr8s4zhms5ijjdkw", name: "Google Ads Premium", period: "monthly", amount: 100000 },
@@ -145,7 +137,6 @@ const prices = [
 ];
 
 async function updatePrice(price) {
-  const billingLength = periodToLength[price.period];
   const requestId = crypto.randomUUID();
 
   const body = {
@@ -154,9 +145,6 @@ async function updatePrice(price) {
     recurring: {
       interval: "month",
       interval_count: 1,
-    },
-    metadata: {
-      billing_length: billingLength,
     },
   };
 
@@ -168,7 +156,7 @@ async function updatePrice(price) {
         body: JSON.stringify(body),
       }
     );
-    console.log(`✓ ${price.name} (${price.period}) → monthly + billing_length=${billingLength} + SGD`);
+    console.log(`✓ ${price.name} (${price.period}) → monthly + SGD`);
     return { success: true, price };
   } catch (err) {
     console.error(`✗ ${price.name} (${price.period}): ${err.message}`);
