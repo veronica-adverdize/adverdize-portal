@@ -86,14 +86,18 @@ async function handleEvent(supabase: any, event: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionUpsert(supabase: any, sub: any) {
   // Resolve organisation from Airwallex customer ID
+  // Billing API uses "billing_customer_id", recurring API uses "customer_id"
+  const custId = sub.billing_customer_id ?? sub.customer_id;
   const { data: org } = await supabase
     .from("organisations")
     .select("id")
-    .eq("airwallex_customer_id", sub.customer_id)
+    .eq("airwallex_customer_id", custId)
     .single();
 
   // Resolve internal price and service from Airwallex price ID
-  const airwallexPriceId = sub.items?.[0]?.price ?? sub.line_items?.[0]?.price;
+  // Billing API nests price under items[].price.id, recurring uses items[].price as string
+  const firstItem = sub.items?.[0] ?? sub.line_items?.[0];
+  const airwallexPriceId = typeof firstItem?.price === "object" ? firstItem.price.id : firstItem?.price;
   const { data: price } = airwallexPriceId
     ? await supabase
         .from("service_prices")
@@ -109,8 +113,8 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
       service_id: price?.service_id ?? null,
       price_id: price?.id ?? null,
       status: sub.status?.toLowerCase() ?? "active",
-      current_period_start: sub.current_period_start ?? null,
-      current_period_end: sub.current_period_end ?? null,
+      current_period_start: sub.current_period_starts_at ?? sub.current_period_start ?? null,
+      current_period_end: sub.next_billing_at ?? sub.current_period_ends_at ?? sub.current_period_end ?? null,
       cancel_at_period_end: sub.cancel_at_period_end ?? false,
     },
     { onConflict: "airwallex_subscription_id" }
@@ -133,11 +137,11 @@ async function handleInvoicePaid(supabase: any, inv: any) {
       airwallex_invoice_id: inv.id,
       organisation_id: subRow?.organisation_id ?? null,
       subscription_id: subRow?.id ?? null,
-      amount: inv.amount_due ?? inv.amount_paid ?? 0,
+      amount: Math.round((inv.amount_due ?? inv.amount_paid ?? 0) * 100),
       currency: inv.currency ?? "SGD",
       status: "paid",
       paid_at: new Date().toISOString(),
-      invoice_url: inv.hosted_invoice_url ?? inv.invoice_url ?? null,
+      invoice_url: inv.hosted_url ?? inv.pdf_url ?? inv.hosted_invoice_url ?? null,
     },
     { onConflict: "airwallex_invoice_id" }
   );

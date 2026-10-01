@@ -21,12 +21,18 @@ export async function syncBillingData(
     if (!sub.airwallex_subscription_id) continue;
     try {
       const awSub = await getSubscription(sub.airwallex_subscription_id);
+      // Airwallex billing API uses "current_period_starts_at" / "current_period_ends_at"
+      // while recurring API uses "current_period_start" / "current_period_end"
+      const periodEnd = awSub.current_period_ends_at ?? awSub.current_period_end ?? null;
+      const periodStart = awSub.current_period_starts_at ?? awSub.current_period_start ?? null;
+      // next_billing_at is the most reliable for "Next Billing" display
+      const nextBilling = awSub.next_billing_at ?? periodEnd;
       await adminClient
         .from("subscriptions")
         .update({
           status: (awSub.status ?? "ACTIVE").toLowerCase(),
-          current_period_start: awSub.current_period_start_at ?? awSub.current_period_start ?? null,
-          current_period_end: awSub.current_period_end_at ?? awSub.current_period_end ?? null,
+          current_period_start: periodStart,
+          current_period_end: nextBilling,
           cancel_at_period_end: awSub.cancel_at_period_end ?? false,
         })
         .eq("id", sub.id);
@@ -45,16 +51,20 @@ export async function syncBillingData(
         (s) => s.airwallex_subscription_id === inv.subscription_id
       );
       const isPaid = inv.payment_status?.toUpperCase() === "PAID";
+      // Airwallex returns amounts in currency units (e.g. 500 = $500)
+      // We store in cents to match service_prices convention
+      const rawAmount = inv.total_amount ?? inv.amount_due ?? 0;
+      const amountInCents = Math.round(rawAmount * 100);
 
       await adminClient.from("invoices").upsert(
         {
           airwallex_invoice_id: inv.id,
           organisation_id: organisationId,
           subscription_id: matchingSub?.id ?? null,
-          amount: inv.total_amount ?? inv.amount_due ?? 0,
+          amount: amountInCents,
           currency: inv.currency ?? "USD",
           status: isPaid ? "paid" : "unpaid",
-          paid_at: isPaid ? (inv.paid_at ?? inv.created_at ?? new Date().toISOString()) : null,
+          paid_at: isPaid ? (inv.paid_at ?? inv.finalized_at ?? inv.created_at ?? new Date().toISOString()) : null,
           invoice_url: inv.hosted_url ?? inv.pdf_url ?? null,
         },
         { onConflict: "airwallex_invoice_id" }
