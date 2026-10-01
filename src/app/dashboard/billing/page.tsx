@@ -151,7 +151,7 @@ export default async function BillingPage({
 
       {/* Payment Method */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -212,7 +212,7 @@ export default async function BillingPage({
 
       {/* Pause Subscription */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
@@ -234,7 +234,7 @@ export default async function BillingPage({
 
       {/* Invoice history */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
