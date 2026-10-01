@@ -79,9 +79,10 @@ export async function createAirwallexCustomer(params: {
   name: string;
   merchantCustomerId: string;
 }) {
-  return airwallexFetch("/api/v1/customers/create", {
+  return airwallexFetch("/api/v1/billing/customers/create", {
     method: "POST",
     body: JSON.stringify({
+      request_id: crypto.randomUUID(),
       email: params.email,
       full_name: params.name,
       merchant_customer_id: params.merchantCustomerId,
