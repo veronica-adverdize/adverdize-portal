@@ -208,53 +208,55 @@ export default async function AdminReportsPage() {
             <p className="text-xs text-gray-300 mt-1">Invoices will appear here once clients make payments.</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
-            {recentInvoices.map((inv, idx) => (
-              <div key={idx} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-2">
-                  {inv.status === "paid" ? (
-                    <CheckCircle size={14} className="text-green-500 shrink-0" />
-                  ) : (
-                    <XCircle size={14} className="text-red-400 shrink-0" />
-                  )}
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900">
-                      {inv.currency} {(inv.amount / 100).toLocaleString()}
-                    </p>
-                    {inv.paid_at && (
-                      <p className="text-xs text-gray-400">
-                        {new Date(inv.paid_at).toLocaleDateString("en-SG", {
-                          day: "numeric", month: "short", year: "numeric",
-                        })}
-                      </p>
+          <>
+            <div className="divide-y divide-gray-50">
+              {recentInvoices.map((inv, idx) => (
+                <div key={idx} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-2">
+                    {inv.status === "paid" ? (
+                      <CheckCircle size={14} className="text-green-500 shrink-0" />
+                    ) : (
+                      <XCircle size={14} className="text-red-400 shrink-0" />
                     )}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900">
+                        {inv.currency} {(inv.amount / 100).toLocaleString()}
+                      </p>
+                      {inv.paid_at && (
+                        <p className="text-xs text-gray-400">
+                          {new Date(inv.paid_at).toLocaleDateString("en-SG", {
+                            day: "numeric", month: "short", year: "numeric",
+                          })}
+                        </p>
+                      )}
+                    </div>
                   </div>
+                  <span
+                    className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${
+                      inv.status === "paid"
+                        ? "bg-green-50 text-green-600 border-green-100"
+                        : inv.status === "open"
+                        ? "bg-amber-50 text-amber-600 border-amber-100"
+                        : "bg-red-50 text-red-500 border-red-100"
+                    }`}
+                  >
+                    {inv.status}
+                  </span>
                 </div>
-                <span
-                  className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${
-                    inv.status === "paid"
-                      ? "bg-green-50 text-green-600 border-green-100"
-                      : inv.status === "open"
-                      ? "bg-amber-50 text-amber-600 border-amber-100"
-                      : "bg-red-50 text-red-500 border-red-100"
-                  }`}
-                >
-                  {inv.status}
-                </span>
-              </div>
-            ))}
-          </div>
-          {totalInvoiceCount > 5 && (
-            <div className="pt-4 mt-1 border-t border-gray-50 text-center">
-              <Link
-                href="/dashboard/admin/invoices"
-                className="text-xs font-medium hover:underline"
-                style={{ color: "#E05C83" }}
-              >
-                View all {totalInvoiceCount} invoices →
-              </Link>
+              ))}
             </div>
-          )}
+            {totalInvoiceCount > 5 && (
+              <div className="pt-4 mt-1 border-t border-gray-50 text-center">
+                <Link
+                  href="/dashboard/admin/invoices"
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: "#E05C83" }}
+                >
+                  View all {totalInvoiceCount} invoices →
+                </Link>
+              </div>
+            )}
+          </>
         )}
       </div>
 
