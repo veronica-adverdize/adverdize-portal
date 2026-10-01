@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { Package, CreditCard, ArrowRight, CheckCircle2, BarChart3, Zap, TrendingUp } from "lucide-react";
@@ -10,13 +11,16 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  // Use admin client for data queries (server component — never exposed to browser)
+  const adminClient = createAdminClient();
+
+  const { data: profile } = await adminClient
     .from("users")
     .select("*, organisation:organisations(*)")
     .eq("id", user.id)
     .single();
 
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions } = await adminClient
     .from("subscriptions")
     .select("*, service:service_packages(*), price:service_prices!price_id(*)")
     .eq("organisation_id", profile?.organisation_id)
