@@ -7,7 +7,8 @@ export function verifyWebhookSignature(
 ): boolean {
   const secret = process.env.AIRWALLEX_WEBHOOK_SECRET;
   if (!secret) return false;
-  const message = `${timestamp}.${payload}`;
+  // Airwallex concatenates timestamp + body with no separator
+  const message = `${timestamp}${payload}`;
   const expected = crypto
     .createHmac("sha256", secret)
     .update(message)

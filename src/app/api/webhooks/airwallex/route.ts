@@ -57,28 +57,32 @@ export async function POST(request: NextRequest) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleEvent(supabase: any, event: any) {
+  // Airwallex nests the resource under data.object
+  const obj = event.data?.object ?? event.data;
+
   switch (event.name) {
     case "subscription.created":
     case "subscription.updated":
-      await handleSubscriptionUpsert(supabase, event.data);
+    case "subscription.active":
+      await handleSubscriptionUpsert(supabase, obj);
       break;
 
     case "subscription.cancelled":
       await supabase
         .from("subscriptions")
         .update({ status: "cancelled", cancel_at_period_end: false })
-        .eq("airwallex_subscription_id", event.data.id);
+        .eq("airwallex_subscription_id", obj.id);
       break;
 
     case "invoice.payment_succeeded":
-      await handleInvoicePaid(supabase, event.data);
+      await handleInvoicePaid(supabase, obj);
       break;
 
     case "invoice.payment_failed":
       await supabase
         .from("invoices")
         .update({ status: "unpaid" })
-        .eq("airwallex_invoice_id", event.data.id);
+        .eq("airwallex_invoice_id", obj.id);
       break;
   }
 }
