@@ -3,6 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createProduct, createPrice } from "@/lib/airwallex";
 
+async function requireSuperAdmin() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "super_admin") {
+    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+  return { user };
+}
+
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -31,20 +48,8 @@ type PriceInput = {
 };
 
 export async function POST(request: NextRequest) {
-  // Verify the caller is an admin
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { data: profile } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const auth = await requireSuperAdmin();
+  if (auth.error) return auth.error;
 
   const { name, description, features, prices } = await request.json() as {
     name: string;
@@ -109,4 +114,99 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ success: true, packageId: pkg.id });
+}
+
+type PriceUpdate = {
+  id?: string;
+  billing_period: "monthly" | "quarterly" | "semi_annual" | "annual";
+  amount: number;
+  currency: string;
+};
+
+export async function PUT(request: NextRequest) {
+  const auth = await requireSuperAdmin();
+  if (auth.error) return auth.error;
+
+  const { id, name, description, features, is_active, prices } = await request.json() as {
+    id: string;
+    name?: string;
+    description?: string | null;
+    features?: string[];
+    is_active?: boolean;
+    prices?: PriceUpdate[];
+  };
+
+  if (!id) {
+    return NextResponse.json({ error: "Package id is required" }, { status: 400 });
+  }
+
+  const adminClient = createAdminClient();
+
+  // Update package fields
+  const updates: Record<string, unknown> = {};
+  if (name !== undefined) updates.name = name;
+  if (description !== undefined) updates.description = description;
+  if (features !== undefined) updates.features = features;
+  if (is_active !== undefined) updates.is_active = is_active;
+
+  if (Object.keys(updates).length > 0) {
+    const { error } = await adminClient
+      .from("service_packages")
+      .update(updates)
+      .eq("id", id);
+
+    if (error) {
+      return NextResponse.json({ error: "Failed to update package" }, { status: 500 });
+    }
+  }
+
+  // Update prices if provided
+  if (prices && prices.length > 0) {
+    // Get existing prices for this package
+    const { data: existingPrices } = await adminClient
+      .from("service_prices")
+      .select("id, billing_period")
+      .eq("service_id", id);
+
+    const existingMap = new Map(
+      (existingPrices ?? []).map((p) => [p.billing_period, p.id])
+    );
+
+    for (const p of prices) {
+      const existingId = existingMap.get(p.billing_period);
+
+      if (existingId) {
+        // Update existing price row amount
+        await adminClient
+          .from("service_prices")
+          .update({ amount: p.amount, is_active: true })
+          .eq("id", existingId);
+      } else {
+        // Insert new price row (placeholder Airwallex ID for now)
+        await adminClient.from("service_prices").insert({
+          service_id: id,
+          billing_period: p.billing_period,
+          amount: p.amount,
+          currency: p.currency,
+          airwallex_price_id: `placeholder_${id}_${p.billing_period}`,
+          is_active: true,
+        });
+      }
+    }
+
+    // Deactivate prices for billing periods not included
+    const activePeriods = prices.map((p) => p.billing_period);
+    const toDeactivate = (existingPrices ?? [])
+      .filter((p) => !activePeriods.includes(p.billing_period))
+      .map((p) => p.id);
+
+    if (toDeactivate.length > 0) {
+      await adminClient
+        .from("service_prices")
+        .update({ is_active: false })
+        .in("id", toDeactivate);
+    }
+  }
+
+  return NextResponse.json({ success: true });
 }
