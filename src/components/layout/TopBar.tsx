@@ -1,8 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings, Bell, Search } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  Bell,
+  Search,
+  Building2,
+  Package,
+  FileText,
+  Users,
+  Tag,
+  CreditCard,
+  ArrowRight,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
@@ -15,11 +27,108 @@ interface TopBarProps {
   } | null;
 }
 
+interface SearchResult {
+  type: string;
+  id: string;
+  title: string;
+  subtitle?: string;
+  href: string;
+}
+
+const typeIcons: Record<string, typeof Building2> = {
+  client: Building2,
+  service: Package,
+  invoice: FileText,
+  user: Users,
+  promo: Tag,
+  subscription: CreditCard,
+  page: ArrowRight,
+};
+
+const typeLabels: Record<string, string> = {
+  client: "Client",
+  service: "Service",
+  invoice: "Invoice",
+  user: "User",
+  promo: "Promo Code",
+  subscription: "Subscription",
+  page: "Page",
+};
+
 export default function TopBar({ user }: TopBarProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchResults = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setResults([]);
+      setShowResults(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setResults(data.results ?? []);
+      setShowResults(true);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchResults(searchQuery);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery, fetchResults]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function navigateTo(href: string) {
+    setShowResults(false);
+    setSearchQuery("");
+    router.push(href);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!showResults || results.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i < results.length - 1 ? i + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => (i > 0 ? i - 1 : results.length - 1));
+    } else if (e.key === "Enter" && activeIndex >= 0) {
+      e.preventDefault();
+      navigateTo(results[activeIndex].href);
+    } else if (e.key === "Escape") {
+      setShowResults(false);
+    }
+  }
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -28,37 +137,94 @@ export default function TopBar({ user }: TopBarProps) {
     router.refresh();
   }
 
-  const initials = user?.full_name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() ?? "?";
+  const initials =
+    user?.full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() ?? "?";
 
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
       {/* Search */}
-      <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 w-64 focus-within:border-[#E05C83] focus-within:ring-2 focus-within:ring-[#E05C83]/10 transition-all">
-        <Search size={14} className="text-gray-400 shrink-0" />
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && searchQuery.trim() && user?.role === "super_admin") {
-              router.push(`/dashboard/admin/clients?search=${encodeURIComponent(searchQuery.trim())}`);
-            }
-          }}
-          className="bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none w-full"
-        />
+      <div ref={searchRef} className="relative w-72">
+        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus-within:border-[#E05C83] focus-within:ring-2 focus-within:ring-[#E05C83]/10 transition-all">
+          <Search size={14} className="text-gray-400 shrink-0" />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setActiveIndex(-1);
+            }}
+            onFocus={() => {
+              if (results.length > 0) setShowResults(true);
+            }}
+            onKeyDown={handleKeyDown}
+            className="bg-transparent text-sm text-gray-600 placeholder:text-gray-400 outline-none w-full"
+          />
+          {loading && (
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-[#E05C83] rounded-full animate-spin shrink-0" />
+          )}
+        </div>
+
+        {/* Results dropdown */}
+        {showResults && (
+          <div className="absolute left-0 top-full mt-1 w-full max-h-80 overflow-y-auto bg-white rounded-xl border border-gray-100 shadow-lg z-50">
+            {results.length === 0 ? (
+              <div className="px-4 py-6 text-center">
+                <Search size={20} className="text-gray-200 mx-auto mb-1.5" />
+                <p className="text-sm text-gray-400">No results found</p>
+              </div>
+            ) : (
+              <div className="py-1">
+                {results.map((r, i) => {
+                  const Icon = typeIcons[r.type] ?? ArrowRight;
+                  return (
+                    <button
+                      key={`${r.type}-${r.id}`}
+                      onClick={() => navigateTo(r.href)}
+                      className={`flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors ${
+                        i === activeIndex
+                          ? "bg-[#E05C83]/5"
+                          : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                        <Icon size={14} className="text-gray-500" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {r.title}
+                        </p>
+                        {r.subtitle && (
+                          <p className="text-xs text-gray-400 truncate">
+                            {r.subtitle}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-medium text-gray-300 uppercase tracking-wide shrink-0">
+                        {typeLabels[r.type] ?? r.type}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
         {/* Notifications */}
         <div className="relative">
           <button
-            onClick={() => { setNotifOpen(!notifOpen); setOpen(false); }}
+            onClick={() => {
+              setNotifOpen(!notifOpen);
+              setOpen(false);
+            }}
             className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-50 transition-colors text-gray-400 hover:text-gray-600"
           >
             <Bell size={16} />
@@ -66,15 +232,24 @@ export default function TopBar({ user }: TopBarProps) {
 
           {notifOpen && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setNotifOpen(false)}
+              />
               <div className="absolute right-0 top-full mt-1 w-72 bg-white rounded-xl border border-gray-100 shadow-lg py-1 z-50">
                 <div className="px-4 py-2.5 border-b border-gray-50">
-                  <p className="text-sm font-semibold text-gray-900">Notifications</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Notifications
+                  </p>
                 </div>
                 <div className="px-4 py-8 text-center">
                   <Bell size={24} className="text-gray-200 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">You&apos;re all caught up!</p>
-                  <p className="text-xs text-gray-300 mt-0.5">No notifications for now.</p>
+                  <p className="text-sm text-gray-400">
+                    You&apos;re all caught up!
+                  </p>
+                  <p className="text-xs text-gray-300 mt-0.5">
+                    No notifications for now.
+                  </p>
                 </div>
               </div>
             </>
@@ -84,12 +259,17 @@ export default function TopBar({ user }: TopBarProps) {
         {/* Avatar + dropdown */}
         <div className="relative">
           <button
-            onClick={() => { setOpen(!open); setNotifOpen(false); }}
+            onClick={() => {
+              setOpen(!open);
+              setNotifOpen(false);
+            }}
             className="flex items-center gap-2.5 hover:bg-gray-50 rounded-lg px-2 py-1.5 transition-colors"
           >
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0"
-              style={{ background: "linear-gradient(135deg, #E05C83, #F4845F)" }}
+              style={{
+                background: "linear-gradient(135deg, #E05C83, #F4845F)",
+              }}
             >
               {initials}
             </div>
@@ -97,16 +277,23 @@ export default function TopBar({ user }: TopBarProps) {
               <p className="text-sm font-medium text-gray-900 leading-none">
                 {user?.full_name ?? "User"}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">{user?.organisation?.name}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {user?.organisation?.name}
+              </p>
             </div>
           </button>
 
           {open && (
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setOpen(false)}
+              />
               <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border border-gray-100 shadow-lg py-1 z-50">
                 <div className="px-4 py-2.5 border-b border-gray-50">
-                  <p className="text-sm font-medium text-gray-900">{user?.full_name}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.full_name}
+                  </p>
                   <p className="text-xs text-gray-400 mt-0.5">{user?.email}</p>
                 </div>
                 <Link
