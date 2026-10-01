@@ -151,9 +151,11 @@ export default async function DashboardPage() {
                     <Package size={14} style={{ color: "#E05C83" }} />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{sub.service?.name}</p>
+                    <p className="text-sm font-medium text-gray-900">{sub.service?.name ?? "Subscription"}</p>
                     <p className="text-xs text-gray-400 mt-0.5 capitalize">
-                      SGD {(sub.price?.amount / 100).toLocaleString()}/mo · {sub.price?.billing_period?.replace("_", " ")} plan
+                      {sub.price?.amount != null
+                        ? `SGD ${(sub.price.amount / 100).toLocaleString()}/Mo · ${sub.price.billing_period?.replace("_", " ") ?? ""} Plan`
+                        : "Active Plan"}
                     </p>
                   </div>
                 </div>
