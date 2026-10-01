@@ -9,14 +9,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results: [] });
   }
 
-  const supabase = await createClient();
+  let supabase;
+  try {
+    supabase = await createClient();
+  } catch (e) {
+    console.error("Search: failed to create supabase client", e);
+    return NextResponse.json({ results: [], debug: "client_error" });
+  }
+
   const {
     data: { user: authUser },
     error: authError,
   } = await supabase.auth.getUser();
   if (!authUser) {
     console.error("Search: no auth user", authError);
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // Still return page results even without auth
+    return NextResponse.json({ results: getPageResults(q, false) });
   }
 
   const { data: dbUser, error: dbError } = await supabase
@@ -27,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   if (!dbUser) {
     console.error("Search: user not found in db", dbError);
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json({ results: getPageResults(q, false) });
   }
 
   const isAdmin = dbUser.role === "super_admin" || dbUser.role === "staff";
@@ -196,7 +204,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Navigation pages — always available
+  results.push(...getPageResults(q, isAdmin));
+
+  return NextResponse.json({ results: results.slice(0, 15) });
+}
+
+function getPageResults(q: string, isAdmin: boolean) {
   const pages = isAdmin
     ? [
         { title: "Dashboard", href: "/dashboard" },
@@ -217,17 +230,13 @@ export async function GET(req: NextRequest) {
         { title: "Settings", href: "/dashboard/settings" },
       ];
 
-  for (const page of pages) {
-    if (page.title.toLowerCase().includes(q.toLowerCase())) {
-      results.push({
-        type: "page",
-        id: page.href,
-        title: page.title,
-        subtitle: "Page",
-        href: page.href,
-      });
-    }
-  }
-
-  return NextResponse.json({ results: results.slice(0, 15) });
+  return pages
+    .filter((p) => p.title.toLowerCase().includes(q.toLowerCase()))
+    .map((p) => ({
+      type: "page",
+      id: p.href,
+      title: p.title,
+      subtitle: "Page",
+      href: p.href,
+    }));
 }
