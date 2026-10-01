@@ -104,23 +104,36 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
   // Resolve organisation from Airwallex customer ID
   // Billing API uses "billing_customer_id", recurring API uses "customer_id"
   const custId = sub.billing_customer_id ?? sub.customer_id;
-  const { data: org } = await supabase
+  console.log(`[webhook] handleSubscriptionUpsert: sub.id=${sub.id}, billing_customer_id=${sub.billing_customer_id}, customer_id=${sub.customer_id}, resolved custId=${custId}`);
+
+  const { data: org, error: orgErr } = await supabase
     .from("organisations")
     .select("id")
     .eq("airwallex_customer_id", custId)
-    .single();
+    .maybeSingle();
+
+  if (orgErr) console.error(`[webhook] org lookup error:`, orgErr);
+  if (!org) console.warn(`[webhook] No org found for custId=${custId}`);
 
   // Resolve internal price and service from Airwallex price ID
-  // Billing API nests price under items[].price.id, recurring uses items[].price as string
+  // New Billing API: items[].price.id (object), or line_items[].price_id (string)
+  // Old recurring API: items[].price (string)
   const firstItem = sub.items?.[0] ?? sub.line_items?.[0];
-  const airwallexPriceId = typeof firstItem?.price === "object" ? firstItem.price.id : firstItem?.price;
-  const { data: price } = airwallexPriceId
+  const airwallexPriceId =
+    firstItem?.price_id ??
+    (typeof firstItem?.price === "object" ? firstItem.price.id : firstItem?.price);
+  console.log(`[webhook] firstItem keys=${firstItem ? Object.keys(firstItem).join(",") : "none"}, airwallexPriceId=${airwallexPriceId}`);
+
+  const { data: price, error: priceErr } = airwallexPriceId
     ? await supabase
         .from("service_prices")
         .select("id, service_id")
         .eq("airwallex_price_id", airwallexPriceId)
-        .single()
-    : { data: null };
+        .maybeSingle()
+    : { data: null, error: null };
+
+  if (priceErr) console.error(`[webhook] price lookup error:`, priceErr);
+  if (!price && airwallexPriceId) console.warn(`[webhook] No price found for airwallexPriceId=${airwallexPriceId}`);
 
   await supabase.from("subscriptions").upsert(
     {
@@ -145,7 +158,7 @@ async function handleInvoicePaid(supabase: any, inv: any) {
         .from("subscriptions")
         .select("id, organisation_id")
         .eq("airwallex_subscription_id", inv.subscription_id)
-        .single()
+        .maybeSingle()
     : { data: null };
 
   await supabase.from("invoices").upsert(
