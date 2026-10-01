@@ -44,7 +44,7 @@ export async function syncBillingData(
       const matchingSub = subs?.find(
         (s) => s.airwallex_subscription_id === inv.subscription_id
       );
-      const isPaid = inv.status?.toUpperCase() === "PAID";
+      const isPaid = inv.payment_status?.toUpperCase() === "PAID";
 
       await adminClient.from("invoices").upsert(
         {
@@ -55,7 +55,7 @@ export async function syncBillingData(
           currency: inv.currency ?? "USD",
           status: isPaid ? "paid" : "unpaid",
           paid_at: isPaid ? (inv.paid_at ?? inv.created_at ?? new Date().toISOString()) : null,
-          invoice_url: inv.hosted_invoice_url ?? inv.invoice_url ?? null,
+          invoice_url: inv.hosted_url ?? inv.pdf_url ?? null,
         },
         { onConflict: "airwallex_invoice_id" }
       );

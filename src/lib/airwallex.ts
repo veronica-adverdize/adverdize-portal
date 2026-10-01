@@ -175,6 +175,6 @@ export async function getSubscription(subscriptionId: string) {
 
 export async function listInvoices(customerId: string) {
   return airwallexFetch(
-    `/api/v1/billing/invoices?customer_id=${customerId}`
+    `/api/v1/billing/invoices?billing_customer_id=${customerId}`
   );
 }
