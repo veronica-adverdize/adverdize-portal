@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       organisation_id,
       organisation:organisations (
         id,
+        name,
         airwallex_customer_id
       )
     `)
