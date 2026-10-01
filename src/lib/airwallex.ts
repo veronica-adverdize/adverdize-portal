@@ -162,13 +162,10 @@ export async function createPrice(params: {
   currency: string;
   billingPeriod: "monthly" | "quarterly" | "semi_annual" | "annual";
 }) {
-  const intervalMap: Record<string, { interval: string; interval_count: number }> = {
-    monthly: { interval: "month", interval_count: 1 },
-    quarterly: { interval: "month", interval_count: 3 },
-    semi_annual: { interval: "month", interval_count: 6 },
-    annual: { interval: "year", interval_count: 1 },
-  };
-  const { interval, interval_count } = intervalMap[params.billingPeriod];
+  // All plans bill monthly — the billing_period represents the commitment length,
+  // not charge frequency. The discounted rate is charged every month.
+  const interval = "month";
+  const interval_count = 1;
   return airwallexFetch("/api/v1/prices/create", {
     method: "POST",
     body: JSON.stringify({
