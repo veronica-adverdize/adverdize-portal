@@ -278,21 +278,11 @@ export default async function BillingPage({
         </div>
 
         {(recentInvoices?.length ?? 0) === 0 ? (
-          <div className="divide-y divide-gray-50 opacity-30 pointer-events-none select-none">
-            {["Sep 2026", "Aug 2026", "Jul 2026"].map((month) => (
-              <div key={month} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Social Media Management — Monthly</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{month}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-gray-900">SGD 1,200</span>
-                  <span className="badge-active">Paid</span>
-                </div>
-              </div>
-            ))}
-            <p className="text-xs text-gray-400 text-center mt-4 pt-1">
-              Invoices appear here once your first payment is processed.
+          <div className="text-center py-8">
+            <FileText size={28} className="text-gray-200 mx-auto mb-2" />
+            <p className="text-sm text-gray-400 font-medium">No invoices yet</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Invoices will appear here once your first payment is processed.
             </p>
           </div>
         ) : (
