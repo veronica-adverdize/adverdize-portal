@@ -9,6 +9,7 @@ import PortalButton from "@/components/billing/PortalButton";
 import RequestChangeButton from "@/components/billing/RequestChangeButton";
 import PromoCodeForm from "@/components/billing/PromoCodeForm";
 import PauseButton from "@/components/billing/PauseButton";
+import { syncBillingData } from "@/lib/billing-sync";
 
 export default async function BillingPage({
   searchParams,
@@ -29,6 +30,11 @@ export default async function BillingPage({
     .select("organisation_id, organisation:organisations(airwallex_customer_id)")
     .eq("id", user.id)
     .single();
+
+  // Sync latest subscription and invoice data from Airwallex
+  if (profile?.organisation_id) {
+    await syncBillingData(adminClient, profile.organisation_id, profile.organisation);
+  }
 
   const { data: subscriptions } = await adminClient
     .from("subscriptions")

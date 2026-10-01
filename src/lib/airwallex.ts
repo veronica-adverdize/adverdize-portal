@@ -163,3 +163,18 @@ export async function createCustomerPortalSession(params: {
     }),
   });
 }
+
+export async function getSubscription(subscriptionId: string) {
+  try {
+    return await airwallexFetch(`/api/v1/billing/subscriptions/${subscriptionId}`);
+  } catch {
+    // Fall back to recurring endpoint
+    return airwallexFetch(`/api/v1/recurring/subscriptions/${subscriptionId}`);
+  }
+}
+
+export async function listInvoices(customerId: string) {
+  return airwallexFetch(
+    `/api/v1/billing/invoices/list?billing_customer_id=${customerId}`
+  );
+}

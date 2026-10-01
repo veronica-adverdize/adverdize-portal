@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { Package, CreditCard, ArrowRight, CheckCircle2, BarChart3, Zap, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { syncBillingData } from "@/lib/billing-sync";
 
 export default async function DashboardPage() {
   noStore();
@@ -19,6 +20,11 @@ export default async function DashboardPage() {
     .select("*, organisation:organisations(*)")
     .eq("id", user.id)
     .single();
+
+  // Sync latest billing data from Airwallex
+  if (profile?.organisation_id) {
+    await syncBillingData(adminClient, profile.organisation_id, profile.organisation);
+  }
 
   const { data: subscriptions } = await adminClient
     .from("subscriptions")
