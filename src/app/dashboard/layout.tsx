@@ -30,14 +30,14 @@ export default async function DashboardLayout({
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-dvh bg-gray-50 overflow-hidden">
       <div className="hidden md:flex">
         <Sidebar role={profile?.role} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar user={mergedProfile} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-28 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-36 md:pb-6">
           {children}
         </main>
       </div>
