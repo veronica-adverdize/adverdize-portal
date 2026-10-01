@@ -4,11 +4,31 @@
  * 2. Add billing_length metadata (1_mo, 3_mos, 6_mos, 12_mos)
  * 3. Update currency to SGD
  *
- * Usage:
- *   AIRWALLEX_CLIENT_ID=xxx AIRWALLEX_API_KEY=xxx AIRWALLEX_ENV=demo node scripts/update-airwallex-prices.mjs
+ * Usage (from project root):
+ *   node scripts/update-airwallex-prices.mjs
  *
- * Set AIRWALLEX_ENV=prod for production, anything else hits sandbox.
+ * Reads credentials from .env.local automatically.
  */
+
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+// Load .env.local
+const envPath = resolve(process.cwd(), ".env.local");
+try {
+  const envFile = readFileSync(envPath, "utf-8");
+  for (const line of envFile.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, "");
+    if (!process.env[key]) process.env[key] = val;
+  }
+} catch {
+  console.log("No .env.local found, using existing env vars");
+}
 
 const BASE_URL =
   process.env.AIRWALLEX_ENV === "prod"
