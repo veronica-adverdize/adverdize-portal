@@ -67,15 +67,32 @@ export default function NotificationPreferences({ userId }: { userId: string }) 
             <button
               onClick={() => toggle(item.key)}
               disabled={saving === item.key}
-              className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
-                prefs[item.key] ? "" : "bg-gray-200"
-              }`}
-              style={prefs[item.key] ? { backgroundColor: "#E05C83" } : undefined}
+              className="shrink-0"
+              style={{
+                position: "relative",
+                width: 44,
+                height: 24,
+                borderRadius: 9999,
+                backgroundColor: prefs[item.key] ? "#E05C83" : "#d1d5db",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                transition: "background-color 0.2s",
+              }}
             >
               <span
-                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                  prefs[item.key] ? "translate-x-4" : "translate-x-0"
-                }`}
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  left: 2,
+                  width: 20,
+                  height: 20,
+                  borderRadius: 9999,
+                  backgroundColor: "#fff",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  transition: "transform 0.2s",
+                  transform: prefs[item.key] ? "translateX(20px)" : "translateX(0)",
+                }}
               />
             </button>
           </div>
