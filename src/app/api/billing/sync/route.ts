@@ -10,6 +10,18 @@ export async function POST() {
 
   const adminClient = createAdminClient();
 
+  // const { data: profile } = await adminClient
+  //   .from("users")
+  //   .select("organisation_id, organisation:organisations(airwallex_customer_id)")
+  //   .eq("id", user.id)
+  //   .single();
+
+  // if (!profile?.organisation_id) {
+  //   return NextResponse.json({ error: "No organisation" }, { status: 400 });
+  // }
+
+  // const customerId = (profile.organisation as { airwallex_customer_id?: string })?.airwallex_customer_id;
+
   const { data: profile } = await adminClient
     .from("users")
     .select("organisation_id, organisation:organisations(airwallex_customer_id)")

@@ -260,8 +260,37 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// async function handleInvoicePaid(supabase: any, inv: any) {
+//   // Resolve our subscription row from the Airwallex subscription ID on the invoice
+//   const { data: subRow } = inv.subscription_id
+//     ? await supabase
+//         .from("subscriptions")
+//         .select("id, organisation_id")
+//         .eq("airwallex_subscription_id", inv.subscription_id)
+//         .maybeSingle()
+//     : { data: null };
+
+//   await supabase.from("invoices").upsert(
+//     {
+//       airwallex_invoice_id: inv.id,
+//       organisation_id: subRow?.organisation_id ?? null,
+//       subscription_id: subRow?.id ?? null,
+//       amount: Math.round((inv.total_amount ?? inv.amount_due ?? inv.amount_paid ?? 0) * 100),
+//       currency: inv.currency ?? "SGD",
+//       status: "paid",
+//       paid_at: new Date().toISOString(),
+//       invoice_url: inv.hosted_url ?? inv.pdf_url ?? inv.hosted_invoice_url ?? null,
+//     },
+//     { onConflict: "airwallex_invoice_id" }
+//   );
+// }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleInvoicePaid(supabase: any, inv: any) {
-  // Resolve our subscription row from the Airwallex subscription ID on the invoice
+  console.log(
+    `[webhook] handleInvoicePaid: invoice=${inv.id}, subscription_id=${inv.subscription_id}`
+  );
+
+  // First try to resolve the invoice through our existing subscription
   const { data: subRow } = inv.subscription_id
     ? await supabase
         .from("subscriptions")
@@ -270,17 +299,89 @@ async function handleInvoicePaid(supabase: any, inv: any) {
         .maybeSingle()
     : { data: null };
 
-  await supabase.from("invoices").upsert(
-    {
-      airwallex_invoice_id: inv.id,
-      organisation_id: subRow?.organisation_id ?? null,
-      subscription_id: subRow?.id ?? null,
-      amount: Math.round((inv.total_amount ?? inv.amount_due ?? inv.amount_paid ?? 0) * 100),
-      currency: inv.currency ?? "SGD",
-      status: "paid",
-      paid_at: new Date().toISOString(),
-      invoice_url: inv.hosted_url ?? inv.pdf_url ?? inv.hosted_invoice_url ?? null,
-    },
-    { onConflict: "airwallex_invoice_id" }
+  // If the subscription exists, use its organisation
+  let organisationId = subRow?.organisation_id ?? null;
+
+  // If the subscription hasn't been created yet, resolve the
+  // organisation directly from the Airwallex customer.
+  if (!organisationId) {
+    const customerId =
+      inv.billing_customer_id ??
+      inv.customer_id;
+
+    console.log(
+      `[webhook] Invoice customer ID: ${customerId}`
+    );
+
+    if (customerId) {
+      const { data: org, error: orgErr } = await supabase
+        .from("organisations")
+        .select("id")
+        .eq("airwallex_customer_id", customerId)
+        .maybeSingle();
+
+      if (orgErr) {
+        console.error(
+          "[webhook] Invoice organisation lookup error:",
+          orgErr
+        );
+      }
+
+      organisationId = org?.id ?? null;
+    }
+  }
+
+  console.log(
+    `[webhook] Invoice resolved organisation_id=${organisationId}, subscription_id=${subRow?.id ?? null}`
   );
+
+  const { error } = await supabase
+    .from("invoices")
+    .upsert(
+      {
+        airwallex_invoice_id: inv.id,
+        organisation_id: organisationId,
+        subscription_id: subRow?.id ?? null,
+
+        amount: Math.round(
+          (
+            inv.total_amount ??
+            inv.amount_due ??
+            inv.amount_paid ??
+            0
+          ) * 100
+        ),
+
+        currency: inv.currency ?? "SGD",
+        status: "paid",
+
+        paid_at:
+          inv.paid_at ??
+          new Date().toISOString(),
+
+        invoice_url:
+          inv.hosted_url ??
+          inv.pdf_url ??
+          inv.hosted_invoice_url ??
+          null,
+      },
+      {
+        onConflict: "airwallex_invoice_id",
+      }
+    );
+
+  if (error) {
+    console.error(
+      "[webhook] Invoice upsert failed:",
+      error
+    );
+
+    throw error;
+  }
+
+  console.log("[webhook] Invoice saved:", {
+    invoice_id: inv.id,
+    organisation_id: organisationId,
+    subscription_id: subRow?.id ?? null,
+  });
 }
