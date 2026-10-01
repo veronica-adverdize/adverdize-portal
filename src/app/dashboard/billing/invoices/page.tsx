@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { FileText, ExternalLink } from "lucide-react";
 
@@ -7,13 +8,16 @@ export default async function InvoicesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  // Use admin client for data queries (server component only)
+  const adminClient = createAdminClient();
+
+  const { data: profile } = await adminClient
     .from("users")
     .select("organisation_id")
     .eq("id", user.id)
     .single();
 
-  const { data: invoices } = await supabase
+  const { data: invoices } = await adminClient
     .from("invoices")
     .select("*")
     .eq("organisation_id", profile?.organisation_id)

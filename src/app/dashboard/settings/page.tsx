@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { User, Building2, Lock, Settings2, AlertTriangle, Chrome, Bell } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
@@ -9,7 +10,10 @@ export default async function SettingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  // Use admin client for data queries (server component only)
+  const adminClient = createAdminClient();
+
+  const { data: profile } = await adminClient
     .from("users")
     .select("*, organisation:organisations(*)")
     .eq("id", user.id)

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { CreditCard, ArrowUpDown, Package, FileText, Tag, ArrowDownUp, PauseCircle, ExternalLink } from "lucide-react";
@@ -17,19 +18,22 @@ export default async function BillingPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
+  // Use admin client for data queries (server component only)
+  const adminClient = createAdminClient();
+
+  const { data: profile } = await adminClient
     .from("users")
     .select("organisation_id, organisation:organisations(airwallex_customer_id)")
     .eq("id", user.id)
     .single();
 
-  const { data: subscriptions } = await supabase
+  const { data: subscriptions } = await adminClient
     .from("subscriptions")
     .select("*, service:service_packages(*), price:service_prices!price_id(*)")
     .eq("organisation_id", profile?.organisation_id)
     .in("status", ["active", "past_due", "trialing"]);
 
-  const { data: recentInvoices } = await supabase
+  const { data: recentInvoices } = await adminClient
     .from("invoices")
     .select("id, amount, currency, status, paid_at, invoice_url")
     .eq("organisation_id", profile?.organisation_id)
