@@ -43,14 +43,9 @@ async function getClientsData() {
     price: SubPrice | null;
   };
 
-  // Convert amount to monthly equivalent based on billing period
-  function toMonthly(amount: number, period: string): number {
-    switch (period) {
-      case "quarterly": return amount / 3;
-      case "semi_annual": return amount / 6;
-      case "annual": return amount / 12;
-      default: return amount; // monthly
-    }
+  // All plans bill monthly — amount is already the monthly price
+  function toMonthly(amount: number, _period: string): number {
+    return amount;
   }
 
   const clients = (orgs ?? []).map((org) => {
