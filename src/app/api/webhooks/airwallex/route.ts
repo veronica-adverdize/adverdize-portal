@@ -15,7 +15,10 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-signature") ?? "";
   const timestamp = request.headers.get("x-timestamp") ?? "";
 
+  console.log(`Webhook received: timestamp=${timestamp}, sig_length=${signature.length}, payload_length=${payload.length}`);
+
   if (!verifyWebhookSignature(payload, signature, timestamp)) {
+    console.error("Webhook signature verification failed");
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 

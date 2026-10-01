@@ -6,17 +6,32 @@ export function verifyWebhookSignature(
   timestamp: string
 ): boolean {
   const secret = process.env.AIRWALLEX_WEBHOOK_SECRET;
-  if (!secret) return false;
+  if (!secret) {
+    console.error("Webhook verify: AIRWALLEX_WEBHOOK_SECRET not set");
+    return false;
+  }
+  if (!signature || !timestamp) {
+    console.error("Webhook verify: missing signature or timestamp header");
+    return false;
+  }
   // Airwallex concatenates timestamp + body with no separator
   const message = `${timestamp}${payload}`;
   const expected = crypto
     .createHmac("sha256", secret)
     .update(message)
     .digest("hex");
-  return crypto.timingSafeEqual(
-    Buffer.from(expected, "hex"),
-    Buffer.from(signature, "hex")
-  );
+  try {
+    const sigBuf = Buffer.from(signature, "hex");
+    const expBuf = Buffer.from(expected, "hex");
+    if (sigBuf.length !== expBuf.length) {
+      console.error(`Webhook verify: length mismatch sig=${sigBuf.length} exp=${expBuf.length}`);
+      return false;
+    }
+    return crypto.timingSafeEqual(expBuf, sigBuf);
+  } catch (err) {
+    console.error("Webhook verify: comparison failed", err);
+    return false;
+  }
 }
 
 const BASE_URL =
