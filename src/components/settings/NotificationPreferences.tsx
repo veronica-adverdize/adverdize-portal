@@ -67,14 +67,14 @@ export default function NotificationPreferences({ userId }: { userId: string }) 
             <button
               onClick={() => toggle(item.key)}
               disabled={saving === item.key}
-              className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
+              className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
                 prefs[item.key] ? "" : "bg-gray-200"
               }`}
               style={prefs[item.key] ? { backgroundColor: "#E05C83" } : undefined}
             >
               <span
-                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                  prefs[item.key] ? "translate-x-4" : "translate-x-0.5"
+                className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                  prefs[item.key] ? "translate-x-4" : "translate-x-0"
                 }`}
               />
             </button>
