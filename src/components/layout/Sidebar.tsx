@@ -11,6 +11,7 @@ import {
   BarChart3,
   Settings,
   Plug,
+  Tag,
 } from "lucide-react";
 import type { UserRole } from "@/types";
 
@@ -54,6 +55,7 @@ const adminNav = [
     items: [
       { label: "Clients", href: "/dashboard/admin/clients", icon: Users },
       { label: "Services", href: "/dashboard/admin/services", icon: Package },
+      { label: "Promo Codes", href: "/dashboard/admin/promo-codes", icon: Tag },
     ],
   },
   {
