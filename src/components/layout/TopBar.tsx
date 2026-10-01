@@ -101,8 +101,8 @@ export default function TopBar({ user }: TopBarProps) {
         setShowResults(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
   }, []);
 
   function navigateTo(href: string) {
@@ -203,9 +203,7 @@ export default function TopBar({ user }: TopBarProps) {
                           </p>
                         )}
                       </div>
-                      <span className="text-[10px] font-medium text-gray-300 uppercase tracking-wide shrink-0">
-                        {typeLabels[r.type] ?? r.type}
-                      </span>
+                      <ArrowRight size={14} className="text-gray-300 shrink-0" />
                     </button>
                   );
                 })}
