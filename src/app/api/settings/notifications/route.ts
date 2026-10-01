@@ -12,7 +12,7 @@ export async function GET() {
     .from("notification_preferences")
     .select("preferences")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   return NextResponse.json({ preferences: data?.preferences ?? null });
 }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     .from("notification_preferences")
     .select("preferences")
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
   const currentPrefs = existing?.preferences ?? {
     invoice_paid: true,

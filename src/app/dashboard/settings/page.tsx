@@ -34,7 +34,7 @@ export default async function SettingsPage() {
     .toUpperCase() || "?";
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 pb-4">
 
       <div>
         <h1 className="text-2xl font-display font-bold text-gray-900">Settings</h1>
