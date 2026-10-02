@@ -6,12 +6,6 @@ import {
   LogOut,
   Settings,
   Search,
-  Building2,
-  Package,
-  FileText,
-  Users,
-  Tag,
-  CreditCard,
   ArrowRight,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -34,25 +28,6 @@ interface SearchResult {
   href: string;
 }
 
-const typeIcons: Record<string, typeof Building2> = {
-  client: Building2,
-  service: Package,
-  invoice: FileText,
-  user: Users,
-  promo: Tag,
-  subscription: CreditCard,
-  page: ArrowRight,
-};
-
-const typeLabels: Record<string, string> = {
-  client: "Client",
-  service: "Service",
-  invoice: "Invoice",
-  user: "User",
-  promo: "Promo Code",
-  subscription: "Subscription",
-  page: "Page",
-};
 
 export default function TopBar({ user }: TopBarProps) {
   const router = useRouter();
@@ -178,9 +153,7 @@ export default function TopBar({ user }: TopBarProps) {
               </div>
             ) : (
               <div className="py-1">
-                {results.map((r, i) => {
-                  const Icon = typeIcons[r.type] ?? ArrowRight;
-                  return (
+                {results.map((r, i) => (
                     <button
                       key={`${r.type}-${r.id}`}
                       onClick={() => navigateTo(r.href)}
@@ -190,23 +163,12 @@ export default function TopBar({ user }: TopBarProps) {
                           : "hover:bg-gray-50"
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                        <Icon size={14} className="text-gray-500" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {r.title}
-                        </p>
-                        {r.subtitle && (
-                          <p className="text-xs text-gray-400 truncate">
-                            {r.subtitle}
-                          </p>
-                        )}
-                      </div>
-                      <ArrowRight size={14} className="text-gray-300 shrink-0" />
+                      <p className="text-sm font-medium text-gray-900 truncate flex-1 min-w-0">
+                        {r.title}
+                      </p>
+                      <ArrowRight size={14} className="text-gray-400 shrink-0" />
                     </button>
-                  );
-                })}
+                ))}
               </div>
             )}
           </div>

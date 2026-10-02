@@ -243,7 +243,6 @@ function getPageResults(q: string, isAdmin: boolean) {
       type: "page",
       id: p.href,
       title: p.title,
-      subtitle: "Page",
       href: p.href,
     }));
 }
