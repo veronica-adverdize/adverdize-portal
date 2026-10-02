@@ -83,7 +83,7 @@ export default function TopBar({ user }: TopBarProps) {
   function navigateTo(href: string) {
     setShowResults(false);
     setSearchQuery("");
-    router.push(href);
+    window.location.href = href;
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -156,6 +156,7 @@ export default function TopBar({ user }: TopBarProps) {
                 {results.map((r, i) => (
                     <button
                       key={`${r.type}-${r.id}`}
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => navigateTo(r.href)}
                       className={`flex items-center gap-3 w-full px-4 py-2.5 text-left transition-colors ${
                         i === activeIndex
