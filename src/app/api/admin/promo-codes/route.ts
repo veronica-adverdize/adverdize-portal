@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 async function verifyAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -11,7 +13,7 @@ async function verifyAdmin() {
     .select("role")
     .eq("id", user.id)
     .single();
-  return profile?.role === "super_admin" ? user : null;
+  return profile?.role === "super_admin" || profile?.role === "staff" ? user : null;
 }
 
 export async function GET() {

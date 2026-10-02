@@ -217,25 +217,26 @@ export async function GET(req: NextRequest) {
 }
 
 function getPageResults(q: string, isAdmin: boolean) {
-  const pages = isAdmin
-    ? [
-        { title: "Dashboard", href: "/dashboard" },
-        { title: "Clients", href: "/dashboard/admin/clients" },
-        { title: "Services", href: "/dashboard/admin/services" },
-        { title: "Analytics", href: "/dashboard/admin/reports" },
-        { title: "Promo Codes", href: "/dashboard/admin/promo-codes" },
-        { title: "Billing", href: "/dashboard/billing" },
-        { title: "Integrations", href: "/dashboard/integrations" },
-        { title: "Settings", href: "/dashboard/settings" },
-      ]
-    : [
-        { title: "Dashboard", href: "/dashboard" },
-        { title: "Services", href: "/dashboard/services" },
-        { title: "Billing", href: "/dashboard/billing" },
-        { title: "Invoices", href: "/dashboard/billing/invoices" },
-        { title: "Integrations", href: "/dashboard/integrations" },
-        { title: "Settings", href: "/dashboard/settings" },
-      ];
+  const common = [
+    { title: "Dashboard", href: "/dashboard" },
+    { title: "Billing", href: "/dashboard/billing" },
+    { title: "Integrations", href: "/dashboard/integrations" },
+    { title: "Settings", href: "/dashboard/settings" },
+  ];
+
+  const adminPages = [
+    { title: "Clients", href: "/dashboard/admin/clients" },
+    { title: "Services", href: "/dashboard/admin/services" },
+    { title: "Analytics", href: "/dashboard/admin/reports" },
+    { title: "Promo Codes", href: "/dashboard/admin/promo-codes" },
+  ];
+
+  const clientPages = [
+    { title: "Services", href: "/dashboard/services" },
+    { title: "Invoices", href: "/dashboard/billing/invoices" },
+  ];
+
+  const pages = [...common, ...(isAdmin ? adminPages : clientPages)];
 
   return pages
     .filter((p) => p.title.toLowerCase().includes(q.toLowerCase()))
