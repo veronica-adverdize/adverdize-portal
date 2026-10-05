@@ -34,7 +34,13 @@ export async function POST() {
     return NextResponse.json({ error: "No organisation" }, { status: 400 });
   }
 
-  const customerId = (profile.organisation as { airwallex_customer_id?: string })?.airwallex_customer_id;
+  const organisation = Array.isArray(profile.organisation)
+  ? profile.organisation[0]
+  : profile.organisation;
+
+  const customerId = organisation?.airwallex_customer_id;
+
+  // const customerId = (profile.organisation as { airwallex_customer_id?: string })?.airwallex_customer_id;
 
   // Sync subscriptions
   const { data: subs } = await adminClient

@@ -152,14 +152,14 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
   let priceId = metadataPriceId;
   let serviceId = metadataServiceId;
 
-  const { data: org, error: orgErr } = await supabase
-    .from("organisations")
-    .select("id")
-    .eq("airwallex_customer_id", custId)
-    .maybeSingle();
+  // const { data: org, error: orgErr } = await supabase
+  //   .from("organisations")
+  //   .select("id")
+  //   .eq("airwallex_customer_id", custId)
+  //   .maybeSingle();
 
-  if (orgErr) console.error(`[webhook] org lookup error:`, orgErr);
-  if (!org) console.warn(`[webhook] No org found for custId=${custId}`);
+  // if (orgErr) console.error(`[webhook] org lookup error:`, orgErr);
+  // if (!org) console.warn(`[webhook] No org found for custId=${custId}`);
 
   // Resolve internal price and service from Airwallex price ID
   // New Billing API: items[].price.id (object), or line_items[].price_id (string)
@@ -200,7 +200,8 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
         airwallex_subscription_id: sub.id,
 
         // Metadata is preferred, Airwallex customer lookup is the fallback
-        organisation_id: organisationId ?? org?.id ?? null,
+        // organisation_id: organisationId ?? org?.id ?? null,
+        organisation_id: organisationId ?? null,
 
         // Metadata is preferred, Airwallex price lookup is the fallback
         service_id: serviceId ?? price?.service_id ?? null,
@@ -239,7 +240,8 @@ async function handleSubscriptionUpsert(supabase: any, sub: any) {
 
   console.log("[webhook] Subscription saved:", {
     subscription_id: sub.id,
-    organisation_id: organisationId ?? org?.id ?? null,
+    // organisation_id: organisationId ?? org?.id ?? null,
+    organisation_id: organisationId ?? null,
     service_id: serviceId ?? price?.service_id ?? null,
     price_id: priceId ?? price?.id ?? null,
   });
