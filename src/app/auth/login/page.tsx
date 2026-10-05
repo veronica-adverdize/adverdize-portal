@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [airwallexLoading, setAirwallexLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Pick up error from OAuth redirects (e.g. Airwallex)
+  useEffect(() => {
+    const urlError = searchParams.get("error");
+    if (urlError) setError(urlError);
+  }, [searchParams]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -71,11 +79,12 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Google SSO */}
+      {/* SSO buttons */}
+      <div className="space-y-2.5 mb-5">
       <button
         onClick={handleGoogleLogin}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed mb-5"
+        className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {googleLoading ? (
           <svg className="animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
@@ -92,6 +101,27 @@ export default function LoginPage() {
         )}
         {googleLoading ? "Redirecting..." : "Continue with Google"}
       </button>
+
+      <button
+        onClick={() => {
+          setAirwallexLoading(true);
+          setError("");
+          window.location.href = "/api/auth/airwallex";
+        }}
+        disabled={airwallexLoading}
+        className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {airwallexLoading ? (
+          <svg className="animate-spin w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+        ) : (
+          <img src="/logos/airwallex.png" alt="Airwallex" className="w-4 h-4 object-contain" />
+        )}
+        {airwallexLoading ? "Redirecting..." : "Continue with Airwallex"}
+      </button>
+      </div>
 
       {/* Divider */}
       <div className="relative mb-5">

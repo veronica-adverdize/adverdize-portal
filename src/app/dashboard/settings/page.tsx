@@ -5,6 +5,7 @@ import { User, Building2, Lock, Settings2, AlertTriangle } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import GoogleSignInSection from "@/components/settings/GoogleSignInSection";
+import AirwallexConnectionSection from "@/components/settings/AirwallexConnectionSection";
 import NotificationPreferences from "@/components/settings/NotificationPreferences";
 
 export default async function SettingsPage() {
@@ -109,6 +110,12 @@ export default async function SettingsPage() {
           || user.app_metadata?.providers?.includes("google")
           || false
         }
+      />
+
+      {/* Airwallex Connection */}
+      <AirwallexConnectionSection
+        connected={!!profile?.organisation?.airwallex_account_id}
+        airwallexAccountId={profile?.organisation?.airwallex_account_id}
       />
 
       {/* Notifications */}
