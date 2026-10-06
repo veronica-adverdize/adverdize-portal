@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangeAirwallexCode, getAirwallexAccount } from "@/lib/airwallex-oauth";
+import { encrypt } from "@/lib/encryption";
 
 export const dynamic = "force-dynamic";
 
@@ -135,33 +136,31 @@ async function handleLoginFlow({
     return clearCookiesAndRedirect(errorUrl.toString());
   }
 
-  // Find user in this org
-  let userId: string | null = null;
-
-  if (accountEmail) {
-    const { data: emailUser } = await admin
-      .from("users")
-      .select("id")
-      .eq("organisation_id", org.id)
-      .eq("email", accountEmail)
-      .single();
-    userId = emailUser?.id ?? null;
+  // Find user by exact email match only (no fallback to random admin)
+  if (!accountEmail) {
+    const errorUrl = new URL("/auth/login", origin);
+    errorUrl.searchParams.set(
+      "error",
+      "No email found on your Airwallex account. Please sign in with Google or email instead."
+    );
+    return clearCookiesAndRedirect(errorUrl.toString());
   }
 
-  if (!userId) {
-    const { data: orgUser } = await admin
-      .from("users")
-      .select("id")
-      .eq("organisation_id", org.id)
-      .in("role", ["client_admin", "super_admin", "staff"])
-      .limit(1)
-      .single();
-    userId = orgUser?.id ?? null;
-  }
+  const { data: emailUser } = await admin
+    .from("users")
+    .select("id")
+    .eq("organisation_id", org.id)
+    .eq("email", accountEmail)
+    .single();
+
+  const userId = emailUser?.id ?? null;
 
   if (!userId) {
     const errorUrl = new URL("/auth/login", origin);
-    errorUrl.searchParams.set("error", "No user found for this organisation.");
+    errorUrl.searchParams.set(
+      "error",
+      "Your Airwallex email doesn't match any user in this organisation. Please sign in with Google or email, then connect Airwallex in Settings."
+    );
     return clearCookiesAndRedirect(errorUrl.toString());
   }
 
@@ -263,15 +262,15 @@ async function storeConnection(
     })
     .eq("id", organisationId);
 
-  // Upsert the connection tokens
+  // Upsert the connection tokens (encrypted at rest)
   await admin
     .from("airwallex_connections")
     .upsert(
       {
         organisation_id: organisationId,
         airwallex_account_id: accountId,
-        access_token: accessToken,
-        refresh_token: refreshToken,
+        access_token: encrypt(accessToken),
+        refresh_token: encrypt(refreshToken),
         token_expires_at: tokenExpiresAt,
         connected_by: userId,
         updated_at: new Date().toISOString(),

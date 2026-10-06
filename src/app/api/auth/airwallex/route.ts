@@ -19,7 +19,9 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const origin = url.origin;
-  const returnTo = url.searchParams.get("return_to") ?? "";
+  const ALLOWED_RETURN_TO = ["settings"];
+  const rawReturnTo = url.searchParams.get("return_to") ?? "";
+  const returnTo = ALLOWED_RETURN_TO.includes(rawReturnTo) ? rawReturnTo : "";
   const state = crypto.randomBytes(32).toString("hex");
   const redirectUri = `${origin}/api/auth/airwallex/callback`;
 

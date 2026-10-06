@@ -27,12 +27,20 @@ interface AirwallexAccount {
   };
 }
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 export async function exchangeAirwallexCode(
   code: string,
   redirectUri: string
 ): Promise<AirwallexTokenResponse> {
-  const clientId = process.env.AIRWALLEX_OAUTH_CLIENT_ID!;
-  const clientSecret = process.env.AIRWALLEX_OAUTH_CLIENT_SECRET!;
+  const clientId = requireEnv("AIRWALLEX_OAUTH_CLIENT_ID");
+  const clientSecret = requireEnv("AIRWALLEX_OAUTH_CLIENT_SECRET");
 
   const body = new URLSearchParams({
     client_id: clientId,
@@ -49,8 +57,7 @@ export async function exchangeAirwallexCode(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("[airwallex-oauth] Token exchange failed:", res.status, text);
+    console.error("[airwallex-oauth] Token exchange failed:", res.status);
     throw new Error(`Airwallex token exchange failed: ${res.status}`);
   }
 
@@ -65,8 +72,7 @@ export async function getAirwallexAccount(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    console.error("[airwallex-oauth] Account fetch failed:", res.status, text);
+    console.error("[airwallex-oauth] Account fetch failed:", res.status);
     throw new Error(`Failed to fetch Airwallex account: ${res.status}`);
   }
 
@@ -77,8 +83,8 @@ export async function refreshAirwallexToken(
   refreshToken: string
 ): Promise<AirwallexTokenResponse> {
   const body = new URLSearchParams({
-    client_id: process.env.AIRWALLEX_OAUTH_CLIENT_ID!,
-    client_secret: process.env.AIRWALLEX_OAUTH_CLIENT_SECRET!,
+    client_id: requireEnv("AIRWALLEX_OAUTH_CLIENT_ID"),
+    client_secret: requireEnv("AIRWALLEX_OAUTH_CLIENT_SECRET"),
     grant_type: "refresh_token",
     refresh_token: refreshToken,
   });
@@ -90,8 +96,8 @@ export async function refreshAirwallexToken(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Airwallex token refresh failed: ${res.status} ${text}`);
+    console.error("[airwallex-oauth] Token refresh failed:", res.status);
+    throw new Error(`Airwallex token refresh failed: ${res.status}`);
   }
 
   return res.json();
